@@ -7,9 +7,19 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: {
     type: String,
-    enum: ["super_admin", "admin", "retailer", "whole_saler"],
+    enum: [
+      "super_admin",
+      "admin",
+      "distributor", // Supplies to wholesalers/retailers
+      "wholesaler", // Supplies to retailers in bulk
+      "retailer",
+      "sales_executive",
+      "accountant",
+      "customer_support",
+    ],
     default: "retailer",
   },
+  enterprise: { type: mongoose.Schema.Types.ObjectId, ref: "Enterprise" },
   businessName: { type: String }, // Only for retailers
   phoneNumber: { type: String },
   address: {
