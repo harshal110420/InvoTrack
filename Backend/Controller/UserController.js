@@ -1,4 +1,5 @@
 const UserModel = require("../Model/UserModel");
+const RoleModel = require("../Model/RoleModel"); // Ensure Role exists
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcryptjs");
 
@@ -11,6 +12,7 @@ const createUser = asyncHandler(async (req, res) => {
     email,
     password,
     role,
+    enterprise,
     businessName,
     phoneNumber,
     address,
@@ -18,27 +20,34 @@ const createUser = asyncHandler(async (req, res) => {
     isActive,
   } = req.body;
 
-  // 🛑 Only Super Admin can create users
-  if (req.user.role !== "super_admin") {
+  // 🛑 Ensure only Super Admin can create users
+  if (!req.user.role || req.user.role.toString() !== "super_admin") {
     return res
       .status(403)
       .json({ message: "Access Denied! Only super_admin can create users." });
   }
 
+  // ✅ Validate Role ID
+  const existingRole = await RoleModel.findById(role);
+  if (!existingRole) {
+    return res.status(400).json({ message: "Invalid role ID" });
+  }
+
   // ✅ Check if user already exists
   const userExists = await UserModel.findOne({ email });
   if (userExists) {
-    return res.status(400).json({ message: "User already exists." });
+    return res
+      .status(400)
+      .json({ message: "User with this email already exists." });
   }
 
-  // ✅ Hash Password before saving
-  const hashedPassword = await bcrypt.hash(password, 10);
-
+  // 🔐 Hash Password (Handled in Schema, so no need here)
   const user = await UserModel.create({
     fullName,
     email,
-    password: hashedPassword, // 🔐 Save hashed password
+    password, // Password will be hashed in the model
     role,
+    enterprise,
     businessName,
     phoneNumber,
     address,

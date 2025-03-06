@@ -3,22 +3,16 @@ const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  role: {
-    type: String,
-    enum: [
-      "super_admin",
-      "admin",
-      "distributor", // Supplies to wholesalers/retailers
-      "wholesaler", // Supplies to retailers in bulk
-      "retailer",
-      "sales_executive",
-      "accountant",
-      "customer_support",
-    ],
-    default: "retailer",
+  email: { 
+    type: String, 
+    required: true, 
+    unique: true, 
+    lowercase: true, 
+    trim: true, 
+    match: [/^\S+@\S+\.\S+$/, "Invalid email format"]
   },
+  password: { type: String, required: true },
+  role: { type: mongoose.Schema.Types.ObjectId, ref: "Role", required: true },
   enterprise: { type: mongoose.Schema.Types.ObjectId, ref: "Enterprise" },
   businessName: { type: String }, // Only for retailers
   phoneNumber: { type: String },
