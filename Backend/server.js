@@ -1,26 +1,37 @@
 const express = require("express");
-require("dotenv").config(); // Yeh sahi hai
+require("dotenv").config(); // Load environment variables
 const cors = require("cors");
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/database");
+const roleRoutes = require("./Routes/RoleRoutes"); // Import User Routes
+const userRoutes = require("./Routes/UserRoutes"); // Import User Routes
+const { errorHandler, notFound } = require("./Middleware/ErrorMiddleware"); // Import Error Handlers
 
 const app = express();
 
-// Connect Database
+// ✅ Connect Database
 connectDB();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(cookieParser());
+// ✅ Middleware
+app.use(cors({ origin: process.env.FRONTEND_URL || "*", credentials: true })); // Allow only specific frontend
+app.use(express.json()); // Parse JSON requests
+app.use(cookieParser()); // Parse cookies
 
-// Test Route
+// ✅ Test Route
 app.get("/", (req, res) => {
-  res.send("API is running...");
+  res.send("🚀 API is running...");
 });
 
-// Database Connection
+// ✅ API Routes
+app.use("/api/roles", roleRoutes); // User-related routes
+app.use("/api/users", userRoutes); // User-related routes
+
+// ✅ Error Handling Middleware (Global)
+app.use(notFound);
+app.use(errorHandler);
+
+// ✅ Database Connection & Server Listening
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
