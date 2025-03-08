@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const enterpriseSchema = new mongoose.Schema({
-  enterpriseCode: { type: String, required: true, unique: true, trim: true },
+  enterpriseCode: { type: String, required: true, unique: true, trim: true, uppercase:true},
   name: { type: String, required: true, unique: true, trim: true },
   ownerName: { type: String, required: true, trim: true },
   email: { 
@@ -12,8 +12,9 @@ const enterpriseSchema = new mongoose.Schema({
     trim: true, 
     match: [/^\S+@\S+\.\S+$/, "Invalid email format"] 
   },
-  phoneNumber: { type: String, match: [/^\d{10}$/, "Phone number must be 10 digits"] },
-  gstNumber: { type: String, trim: true },
+  phoneNumber: { type: String, trim: true,  match: [/^\d{10}$/, "Phone number must be 10 digits"] },
+  gstNumber: { type: String, trim: true, uppercase:true },
+  panNumber: { type: String, trim: true, uppercase:true },
   address: {
     street: { type: String, trim: true },
     city: { type: String, trim: true },

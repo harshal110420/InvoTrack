@@ -57,19 +57,28 @@ const updateTaxConfig = asyncHandler(async (req, res) => {
   if (!taxConfig) {
     return res.status(404).json({ message: "Tax configuration not found" });
   }
-  Object.assign(taxConfig, req.body);
-  const updatedTaxConfig = await taxConfig.save();
 
-  res
-    .status(200)
-    .json({ message: "Tax configuration updated", updatedTaxConfig });
+  // ✅ Validate and Update Fields Properly
+  if (req.body.GSTRateName) taxConfig.GSTRateName = req.body.GSTRateName;
+
+  if (req.body.IGST !== undefined) taxConfig.IGST = req.body.IGST;
+  if (req.body.CGST !== undefined) taxConfig.CGST = req.body.CGST;
+  if (req.body.SGST !== undefined) taxConfig.SGST = req.body.SGST;
+  if (req.body.UGST !== undefined) taxConfig.UGST = req.body.UGST;
+
+  if (typeof req.body.isActive === "boolean") {
+    taxConfig.isActive = req.body.isActive;
+  }
+
+  await taxConfig.save();
+  res.status(200).json({ message: "Tax configuration updated", taxConfig });
 });
 
 // @desc    Delete a tax configuration
 // @route   DELETE /api/tax-config/:id
 // @access  Private
 const deleteTaxConfig = asyncHandler(async (req, res) => {
-  const taxConfig = await TaxConfig.findById(req.params.id);
+  const taxConfig = await TaxConfigModel.findById(req.params.id);
   if (!taxConfig) {
     return res.status(404).json({ message: "Tax configuration not found" });
   }
