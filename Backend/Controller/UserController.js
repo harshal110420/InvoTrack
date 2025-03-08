@@ -1,5 +1,5 @@
-const UserModel = require("../Model/UserModel");
-const RoleModel = require("../Model/RoleModel"); // Ensure Role exists
+const UserModel = require("../Model/SystemConfigureModel/UserModel");
+const RoleModel = require("../Model/SystemConfigureModel/RoleModel"); // Ensure Role exists
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcryptjs");
 

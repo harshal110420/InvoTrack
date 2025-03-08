@@ -17,9 +17,9 @@ exports.authmiddleware = async (req, res, next) => {
   }
 };
 
-exports.adminMiddleware = (req, res, next) => {
-  if (!req.user || !["super_admin"].includes(req.user.role.roleName)) {
-    return res.status(403).json({ message: "Access denied" });
-  }
-  next();
-};
+// exports.adminMiddleware = (req, res, next) => {
+//   if (!req.user || !["super_admin"].includes(req.user.role.roleName)) {
+//     return res.status(403).json({ message: "Access denied" });
+//   }
+//   next();
+// };

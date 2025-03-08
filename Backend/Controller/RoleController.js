@@ -1,7 +1,7 @@
 const RoleModel = require("./../Model/SystemConfigureModel/RoleModel");
 
 // ➤ Create Role
-exports.createRole = async (req, res) => {
+const createRole = async (req, res) => {
   try {
     const { roleName } = req.body;
 
@@ -19,7 +19,7 @@ exports.createRole = async (req, res) => {
 };
 
 // ➤ Get All Roles
-exports.getAllRoles = async (req, res) => {
+const getAllRoles = async (req, res) => {
   try {
     const roles = await RoleModel.find();
     res.status(200).json({ message: "Roles fetched successfully", roles });
@@ -29,7 +29,7 @@ exports.getAllRoles = async (req, res) => {
 };
 
 // ➤ Get Single Role
-exports.getSingleRole = async (req, res) => {
+const getSingleRole = async (req, res) => {
   try {
     const role = await RoleModel.findById(req.params.id);
     if (!role) {
@@ -42,7 +42,7 @@ exports.getSingleRole = async (req, res) => {
 };
 
 // ➤ Update Role
-exports.updateRole = async (req, res) => {
+const updateRole = async (req, res) => {
   try {
     const updatedRole = await RoleModel.findByIdAndUpdate(
       req.params.id,
@@ -61,7 +61,7 @@ exports.updateRole = async (req, res) => {
 };
 
 // ➤ Delete Role
-exports.deleteRole = async (req, res) => {
+const deleteRole = async (req, res) => {
   try {
     const role = await RoleModel.findByIdAndDelete(req.params.id);
     if (!role) {
@@ -71,4 +71,12 @@ exports.deleteRole = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
+};
+
+module.exports = {
+  createRole,
+  getAllRoles,
+  getSingleRole,
+  updateRole,
+  deleteRole,
 };

@@ -4,10 +4,10 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/database");
-const roleRoutes = require("./Routes/RoleRoutes"); // Import User Routes
-const userRoutes = require("./Routes/UserRoutes"); // Import User Routes
 const { errorHandler, notFound } = require("./Middleware/ErrorMiddleware"); // Import Error Handlers
-
+const roleRoutes = require("./Routes/RoleRoutes");
+const userRoutes = require("./Routes/UserRoutes");
+const taxConfigRoutes = require("./Routes/TaxConfigRoutes");
 const app = express();
 
 // ✅ Connect Database
@@ -26,6 +26,7 @@ app.get("/", (req, res) => {
 // ✅ API Routes
 app.use("/api/roles", roleRoutes); // User-related routes
 app.use("/api/users", userRoutes); // User-related routes
+app.use("/api/tax-config", taxConfigRoutes); // User-related routes
 
 // ✅ Error Handling Middleware (Global)
 app.use(notFound);
