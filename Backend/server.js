@@ -8,6 +8,9 @@ const { errorHandler, notFound } = require("./Middleware/ErrorMiddleware"); // I
 const roleRoutes = require("./Routes/RoleRoutes");
 const userRoutes = require("./Routes/UserRoutes");
 const taxConfigRoutes = require("./Routes/TaxConfigRoutes");
+const enterpriseRoutes = require("./Routes/EnterpriseRoutes");
+const HSNCodeRoutes = require("./Routes/HSNCodeRoutes");
+const authRoutes = require("./Routes/AuthRoutes");
 const app = express();
 
 // ✅ Connect Database
@@ -27,6 +30,9 @@ app.get("/", (req, res) => {
 app.use("/api/roles", roleRoutes); // User-related routes
 app.use("/api/users", userRoutes); // User-related routes
 app.use("/api/tax-config", taxConfigRoutes); // User-related routes
+app.use("/api/enterprise", enterpriseRoutes); // User-related routes
+app.use("/api/HSN-codes", HSNCodeRoutes); // User-related routes
+app.use("/api/auth", authRoutes); // User-related routes
 
 // ✅ Error Handling Middleware (Global)
 app.use(notFound);

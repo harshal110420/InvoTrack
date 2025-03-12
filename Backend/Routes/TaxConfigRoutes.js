@@ -6,7 +6,7 @@ const {
   getTaxConfigByID,
   updateTaxConfig,
   deleteTaxConfig,
-} = require("../controllers/taxConfigController");
+} = require("../Controller/TaxConfigController");
 
 const isSuperAdmin = require("../middleware/isSuperAdmin");
 const protect = require("../middleware/authMiddleware"); // If using JWT auth

@@ -6,7 +6,7 @@ const {
   getSingleHSNCode,
   updateHSNCode,
   deleteHSNCode,
-} = require("../../Controller/SystemConfigureController/hsnCodeController");
+} = require("../Controller/HSNCodeController");
 const isSuperAdmin = require("../middleware/isSuperAdmin");
 const { protect } = require("../middleware/authMiddleware");
 
