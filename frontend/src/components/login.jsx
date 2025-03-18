@@ -11,7 +11,7 @@ const loginForm = ({ onLogin }) => {
   };
   return (
     <form onSubmit={handleSubmit} className="p-4 shadow">
-
+      <div>Login page</div>
     </form>
   );
 };
