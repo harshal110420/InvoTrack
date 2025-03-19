@@ -13,6 +13,14 @@ const HSNCodeRoutes = require("./Routes/HSNCodeRoutes");
 const authRoutes = require("./Routes/AuthRoutes");
 const app = express();
 
+
+
+// ✅ CORS Setup
+// app.use(cors({
+//   origin: "http://localhost:5173",  // your frontend origin
+//   credentials: true  // if you're using cookies (optional)
+// }));
+
 // ✅ Connect Database
 connectDB();
 

@@ -10,12 +10,12 @@ const {
 } = require("../Controller/RoleController");
 
 const isSuperAdmin = require("../middleware/isSuperAdmin");
-const { protect } = require("../middleware/authMiddleware");
+const { authmiddleware } = require("../middleware/authMiddleware");
 
-router.post("/create", protect, isSuperAdmin, createRole);
-router.get("/all", protect, getAllRoles);
-router.get("/get/:id", protect, getSingleRole);
-router.put("/update/:id", protect, isSuperAdmin, updateRole);
-router.delete("/delete/:id", protect, isSuperAdmin, deleteRole);
+router.post("/create", authmiddleware, isSuperAdmin, createRole);
+router.get("/all", authmiddleware, getAllRoles);
+router.get("/get/:id", authmiddleware, getSingleRole);
+router.put("/update/:id", authmiddleware, isSuperAdmin, updateRole);
+router.delete("/delete/:id", authmiddleware, isSuperAdmin, deleteRole);
 
 module.exports = router;

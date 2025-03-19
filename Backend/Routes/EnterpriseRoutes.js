@@ -8,13 +8,13 @@ const {
   deleteEnterprise,
 } = require("../Controller/EnterpriseController");
 const isSuperAdmin = require("../middleware/isSuperAdmin");
-const { protect } = require("../middleware/authMiddleware");
+const { authmiddleware } = require("../middleware/authMiddleware");
 
 // Routes
-router.post("/create", protect, isSuperAdmin, createEnterprise);
-router.get("/all", protect, getAllEnterprises);
-router.get("/get/:id", protect, getSingleEnterprise);
-router.put("/update/:id", protect, isSuperAdmin, updateEnterprise);
-router.delete("/delete/:id", protect, isSuperAdmin, deleteEnterprise);
+router.post("/create", authmiddleware, isSuperAdmin, createEnterprise);
+router.get("/all", authmiddleware, getAllEnterprises);
+router.get("/get/:id", authmiddleware, getSingleEnterprise);
+router.put("/update/:id", authmiddleware, isSuperAdmin, updateEnterprise);
+router.delete("/delete/:id", authmiddleware, isSuperAdmin, deleteEnterprise);
 
 module.exports = router;

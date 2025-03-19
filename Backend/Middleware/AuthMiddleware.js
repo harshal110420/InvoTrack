@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../Model/SystemConfigureModel/UserModel");
 
-exports.authmiddleware = async (req, res, next) => {
+const authmiddleware = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) return res.status(401).json({ message: "Unauthorized" });
@@ -16,10 +16,13 @@ exports.authmiddleware = async (req, res, next) => {
     res.status(401).json({ message: "Invalid token" });
   }
 };
-
+  
 // exports.adminMiddleware = (req, res, next) => {
 //   if (!req.user || !["super_admin"].includes(req.user.role.roleName)) {
 //     return res.status(403).json({ message: "Access denied" });
 //   }
 //   next();
 // };
+module.exports ={
+  authmiddleware,
+}

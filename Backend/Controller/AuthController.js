@@ -1,4 +1,4 @@
-import UserModel from "../Model/SystemConfigureModel/UserModel";
+const UserModel = require("../Model/SystemConfigureModel/UserModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -36,7 +36,7 @@ const loginUser = async (req, res) => {
       token,
       user: {
         id: user._id,
-        name: user.name,
+        fullName: user.fullName,
         email: user.email,
         role: user.role?.roleName,
       },
@@ -55,7 +55,23 @@ const logoutUser = async (req, res) => {
   }
 };
 
+const getMe = async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.user.id).populate("role");
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.status(200).json({
+      id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      role: user.role?.roleName,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
 module.exports = {
   loginUser,
   logoutUser,
+  getMe,
 };

@@ -8,13 +8,13 @@ const {
   deleteHSNCode,
 } = require("../Controller/HSNCodeController");
 const isSuperAdmin = require("../middleware/isSuperAdmin");
-const { protect } = require("../middleware/authMiddleware");
+const { authmiddleware } = require("../middleware/authMiddleware");
 
 // Routes
-router.post("/create", protect, isSuperAdmin, createHSNCode);
-router.get("/all", protect, getAllHSNCodes);
-router.get("/get/:id", protect, getSingleHSNCode);
-router.put("/update/:id", protect, isSuperAdmin, updateHSNCode);
-router.delete("/delete/:id", protect, isSuperAdmin, deleteHSNCode);
+router.post("/create", authmiddleware, isSuperAdmin, createHSNCode);
+router.get("/all", authmiddleware, getAllHSNCodes);
+router.get("/get/:id", authmiddleware, getSingleHSNCode);
+router.put("/update/:id", authmiddleware, isSuperAdmin, updateHSNCode);
+router.delete("/delete/:id", authmiddleware, isSuperAdmin, deleteHSNCode);
 
 module.exports = router;

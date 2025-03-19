@@ -1,4 +1,4 @@
-const HSNCodeModel = require("../Model/SystemConfigureModel/HSNCodeModel");
+const HSNCodeModel = require("../Model/SystemConfigureModel/HSNmodel");
 const asyncHandler = require("express-async-handler");
 
 // @desc    Create new HSN Code

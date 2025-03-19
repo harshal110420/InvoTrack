@@ -9,13 +9,13 @@ const {
 } = require("../Controller/TaxConfigController");
 
 const isSuperAdmin = require("../middleware/isSuperAdmin");
-const protect = require("../middleware/authMiddleware"); // If using JWT auth
+const {authmiddleware} = require("../middleware/authMiddleware"); // If using JWT auth
 
 // Routes
-router.post("/", protect, isSuperAdmin, createTaxConfig); // Create Tax Config
-router.get("/", protect, getAllTaxConfigs); // Get All Tax Configs
-router.get("/:id", protect, getTaxConfigByID); // Get Single Tax Config
-router.put("/:id", protect, isSuperAdmin, updateTaxConfig); // Update Tax Config
-router.delete("/:id", protect, isSuperAdmin, deleteTaxConfig); // Delete Tax Config
+router.post("/", authmiddleware, isSuperAdmin, createTaxConfig); // Create Tax Config
+router.get("/", authmiddleware, getAllTaxConfigs); // Get All Tax Configs
+router.get("/:id", authmiddleware, getTaxConfigByID); // Get Single Tax Config
+router.put("/:id", authmiddleware, isSuperAdmin, updateTaxConfig); // Update Tax Config
+router.delete("/:id", authmiddleware, isSuperAdmin, deleteTaxConfig); // Delete Tax Config
 
 module.exports = router;
