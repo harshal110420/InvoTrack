@@ -4,6 +4,7 @@ import { AuthProvider } from "./context/AuthContext";
 import LoginForm from "./pages/LoginPage";
 import Dashboard from "./pages/DashboardPage";
 import PrivateRoute from "./components/privateRoute";
+import RolesPage from "./pages/RolesPage";
 
 function App() {
   return (
@@ -17,6 +18,14 @@ function App() {
             element={
               <PrivateRoute>
                 <Dashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/roles"
+            element={
+              <PrivateRoute module="Roles" permission="read">
+                <RolesPage />
               </PrivateRoute>
             }
           />
