@@ -10,6 +10,7 @@ const createUser = asyncHandler(async (req, res) => {
   const {
     fullName,
     email,
+    username,
     password,
     role,
     enterprise,
@@ -34,17 +35,18 @@ const createUser = asyncHandler(async (req, res) => {
   }
 
   // ✅ Check if user already exists
-  const userExists = await UserModel.findOne({ email });
+  const userExists = await UserModel.findOne({ username });
   if (userExists) {
     return res
       .status(400)
-      .json({ message: "User with this email already exists." });
+      .json({ message: "User with this username already exists." });
   }
 
   // 🔐 Hash Password (Handled in Schema, so no need here)
   const user = await UserModel.create({
     fullName,
     email,
+    username,
     password, // Password will be hashed in the model
     role,
     enterprise,
@@ -105,6 +107,7 @@ const updateUser = asyncHandler(async (req, res) => {
 
   user.fullName = req.body.fullName || user.fullName;
   user.email = req.body.email || user.email;
+  user.username = req.body.username || user.username;
   user.role = req.body.role || user.role;
   user.enterprise = req.body.enterprise || user.enterprise;
   user.businessName = req.body.businessName || user.businessName;

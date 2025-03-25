@@ -7,7 +7,7 @@ const LoginForm = () => {
   const { handleLogin } = useAuth();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
@@ -15,7 +15,7 @@ const LoginForm = () => {
     e.preventDefault();
     try {
       const response = await axiosInstance.post("/auth/login", {
-        email,
+        username,
         password,
       });
       handleLogin(response.data); // Update AuthContext
@@ -38,11 +38,11 @@ const LoginForm = () => {
         )}
 
         <input
-          type="email"
-          placeholder="Email"
+          type="text"
+          placeholder="username"
           className="w-full border p-2 mb-3 rounded-md"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           required
         />
         <input

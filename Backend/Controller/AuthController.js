@@ -4,17 +4,17 @@ const jwt = require("jsonwebtoken");
 
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
     // validate input
-    if (!email || !password) {
+    if (!username || !password) {
       return res
         .status(400)
-        .json({ message: "Email and password are required" });
+        .json({ message: "username and password are required" });
     }
 
-    const user = await UserModel.findOne({ email }).populate("role");
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const user = await UserModel.findOne({ username }).populate("role");
+    if (!user) return res.status(401).json({ message: "Invalid User" });
 
     // Compare passwords
     const isMatch = await bcrypt.compare(password, user.password);
@@ -37,7 +37,7 @@ const loginUser = async (req, res) => {
       user: {
         id: user._id,
         fullName: user.fullName,
-        email: user.email,
+        username: user.username,
         role: user.role?.roleName,
       },
     });
@@ -63,7 +63,7 @@ const getMe = async (req, res) => {
     res.status(200).json({
       id: user._id,
       fullName: user.fullName,
-      email: user.email,
+      username: user.username,
       role: user.role?.roleName,
     });
   } catch (error) {
