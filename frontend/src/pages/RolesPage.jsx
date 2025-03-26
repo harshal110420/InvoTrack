@@ -12,7 +12,7 @@ const RolesPage = () => {
       </ButtonWrapper>
 
       {/* Roles Table */}
-      <div>...Roles List Table...</div>
+      <div>All role display here</div>
 
       <ButtonWrapper module="Roles" permission="delete">
         <button className="bg-red-500 text-white px-4 py-2 rounded-lg mt-4">

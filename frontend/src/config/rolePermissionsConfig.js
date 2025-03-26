@@ -1,29 +1,44 @@
-// src/config/rolePermissionsConfig.js
-
 export const rolePermissionsConfig = {
   super_admin: {
     description: "Top-level access. Manages system configuration and users.",
     modules: {
       Finance: {
-        Accounts: ["create", "read", "update", "delete"],
-        Transactions: ["create", "read", "update", "delete"],
-        Reports: ["read"],
+        Master: {
+          Accounts: ["create", "read", "update", "delete"],
+        },
+        Transaction: {
+          Transactions: ["create", "read", "update", "delete"],
+        },
+        Report: {
+          Reports: ["read"],
+        },
       },
       Sales: {
-        Orders: ["create", "read", "update", "delete"],
-        Customers: ["create", "read", "update", "delete"],
-        Invoices: ["create", "read", "update", "delete"],
+        Master: {
+          Customers: ["create", "read", "update", "delete"],
+        },
+        Transaction: {
+          Orders: ["create", "read", "update", "delete"],
+          Invoices: ["create", "read", "update", "delete"],
+        },
+        Report: {},
       },
       Inventory: {
-        Products: ["create", "read", "update", "delete"],
-        Stock: ["create", "read", "update", "delete"],
-        Suppliers: ["create", "read", "update", "delete"],
+        Master: {
+          Products: ["create", "read", "update", "delete"],
+          Suppliers: ["create", "read", "update", "delete"],
+        },
+        Transaction: {
+          Stock: ["create", "read", "update", "delete"],
+        },
+        Report: {},
       },
       Users: {
-        Management: ["create", "read", "update", "delete"],
-        Roles: ["create", "read", "update", "delete"],
+        Master: {
+          Management: ["create", "read", "update", "delete"],
+          Roles: ["create", "read", "update", "delete"],
+        },
       },
     },
   },
 };
-
