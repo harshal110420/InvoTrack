@@ -1,10 +1,11 @@
 import { useAuth } from "../context/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { rolePermissionsConfig } from "../config/rolePermissionsConfig";
 import { useState } from "react";
 
 const Dashboard = () => {
   const { user, handleLogout } = useAuth();
+  const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   if (!user) return null;
@@ -12,6 +13,10 @@ const Dashboard = () => {
   const role = user?.role;
   const roleModules = rolePermissionsConfig[role]?.modules || {};
 
+  const handleLogoutClick = () =>{
+    handleLogout()
+    navigate("/login")
+  }
   return (
     <div className="h-screen flex flex-col bg-gray-100">
       {/* Navbar */}
@@ -28,7 +33,7 @@ const Dashboard = () => {
             <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-lg overflow-hidden">
               <div className="p-4 text-sm text-gray-700 border-b">{user.email}</div>
               <button
-                onClick={handleLogout}
+                onClick={handleLogoutClick}
                 className="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100"
               >
                 Logout

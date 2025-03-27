@@ -19,7 +19,7 @@ const LoginForm = () => {
         password,
       });
       handleLogin(response.data); // Update AuthContext
-      navigate("/dashboard"); // Redirect after login
+      navigate("/"); // Redirect after login
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     }
