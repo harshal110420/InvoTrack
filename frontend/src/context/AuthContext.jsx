@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
           const response = await axiosInstance.get("/auth/me");
           // ✅ You can directly use fullName, email, role, etc.
           setUser(response.data);
-          // console.log(response);
+          console.log(response);
         }
       } catch (err) {
         console.error("Session expired or invalid token");

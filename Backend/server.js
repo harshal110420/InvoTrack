@@ -11,6 +11,7 @@ const taxConfigRoutes = require("./Routes/TaxConfigRoutes");
 const enterpriseRoutes = require("./Routes/EnterpriseRoutes");
 const HSNCodeRoutes = require("./Routes/HSNCodeRoutes");
 const authRoutes = require("./Routes/AuthRoutes");
+const permissionRoutes = require("./Routes/SystemControllersRoutes/PermissionRoutes");
 const app = express();
 
 
@@ -41,6 +42,7 @@ app.use("/api/tax-config", taxConfigRoutes); // User-related routes
 app.use("/api/enterprise", enterpriseRoutes); // User-related routes
 app.use("/api/HSN-codes", HSNCodeRoutes); // User-related routes
 app.use("/api/auth", authRoutes); // User-related routes
+app.use("/api/permission",permissionRoutes); // User-related routes)
 
 // ✅ Error Handling Middleware (Global)
 app.use(notFound);

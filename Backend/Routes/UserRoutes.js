@@ -7,7 +7,7 @@ const {
   deleteUser,
 } = require("../Controller/UserController");
 const isSuperAdmin = require("../middleware/isSuperAdmin");
-const { authmiddleware } = require("../middleware/authMiddleware");
+const authmiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 

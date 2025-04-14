@@ -10,7 +10,7 @@ const {
 } = require("../Controller/RoleController");
 
 const isSuperAdmin = require("../middleware/isSuperAdmin");
-const { authmiddleware } = require("../middleware/authMiddleware");
+const authmiddleware = require("../middleware/authMiddleware");
 
 router.post("/create", authmiddleware, isSuperAdmin, createRole);
 router.get("/all", authmiddleware, getAllRoles);

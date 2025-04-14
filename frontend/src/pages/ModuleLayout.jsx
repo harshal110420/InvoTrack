@@ -1,20 +1,38 @@
-import { useParams, Outlet, Navigate, Route ,Routes} from "react-router-dom";
-import { rolePermissionsConfig } from "../config/rolePermissionsConfig";
-import Sidebar from "../components/Sidebar";
+import { useParams, Outlet, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import RolesPage from "./RolesPage";
+import { useSelector } from "react-redux";
+import Sidebar from "../components/Sidebar";
+import ModuleRoutes from "./ModuleRoutes";
+
+
 
 const ModuleLayout = () => {
   const { user } = useAuth();
   const { moduleName } = useParams();
+  console.log(moduleName, "Module Name from URL");
+  const { modules } = useSelector((state) => state.permission); // Use Redux state
+  console.log(modules, "Modules from Redux in ModuleLayout");
 
   if (!user) return <Navigate to="/" />;
 
   const role = user.role;
-  const modules = rolePermissionsConfig[role]?.modules || {};
-  const subModules = modules[moduleName.charAt(0).toUpperCase() + moduleName.slice(1)];
 
-  if (!subModules) return <div className="p-4 text-red-500">🚫 Unauthorized Access</div>;
+  // Find the module by matching the moduleName with the module's modulePath
+  const currentModule = modules.find(
+    (module) => module.modulePath === moduleName
+  );
+
+  // If module not found, return unauthorized access
+  if (!currentModule) {
+    return <div className="p-4 text-red-500">🚫 Unauthorized Access</div>;
+  }
+
+  // Now, check if the subModules (Master, Transaction, Report) exist
+  const subModules = currentModule.menus || {};
+
+  if (!subModules || Object.keys(subModules).length === 0) {
+    return <div className="p-4 text-red-500">🚫 Unauthorized Access</div>;
+  }
 
   return (
     <div className="flex h-screen">
@@ -23,10 +41,7 @@ const ModuleLayout = () => {
 
       {/* Main Content */}
       <div className="flex-grow p-6">
-      <Routes>
-          <Route path="roles" element={<RolesPage />} />  {/* ✅ Add Route for RolesPage */}
-          <Route path="*" element={<Outlet />} /> {/* ✅ Catch All Nested Routes */}
-        </Routes>
+        <ModuleRoutes />
       </div>
     </div>
   );

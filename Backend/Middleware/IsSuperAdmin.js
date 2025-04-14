@@ -1,22 +1,32 @@
-const isSuperAdmin = (req, res, next) => {
-  try {
-    // Ensure user and role exist
-    if (!req.user || !req.user.role) {
-      return res.status(401).json({ message: "Unauthorized: User role not found." });
-    }
+const checkPermission = (requiredPermission) => {
+  return (req, res, next) => {
+    try {
+      console.log("🔐 Permission Check Middleware Called");
+      console.log("👤 User in req:", req.user);
 
-    // Check if the role is "super_admin"
-    if (req.user.role.roleName !== "super_admin") {
-      return res.status(403).json({
-        message: "Access Denied! Only super_admin can perform this action.",
-      });
-    }
+      if (!req.user || !req.user.role || !req.user.role.permissions) {
+        return res
+          .status(401)
+          .json({ message: "Unauthorized: No role/permissions" });
+      }
 
-    // Proceed to the next middleware or controller
-    next();
-  } catch (error) {
-    res.status(500).json({ message: "Server error in role verification." });
-  }
+      const userPermissions = req.user.role.permissions;
+      console.log("📜 User Permissions:", userPermissions);
+
+      if (!userPermissions.includes(requiredPermission)) {
+        console.log(`🚫 Missing required permission: ${requiredPermission}`);
+        return res
+          .status(403)
+          .json({ message: "Access denied: Missing permission" });
+      }
+
+      console.log(`✅ Permission granted for: ${requiredPermission}`);
+      next();
+    } catch (error) {
+      console.error("❌ Permission check error:", error);
+      res.status(500).json({ message: "Server error in permission check" });
+    }
+  };
 };
 
-module.exports = isSuperAdmin;
+module.exports = checkPermission;

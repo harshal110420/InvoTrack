@@ -6,7 +6,7 @@ const {
   logoutUser,
   getMe,
 } = require("../Controller/authController");
-const { authmiddleware } = require("../middleware/authMiddleware");
+const authmiddleware = require("../middleware/authMiddleware");
 
 router.post("/login", loginUser); // ❌ No middleware needed
 router.post("/logout", logoutUser); // ❌ No middleware needed

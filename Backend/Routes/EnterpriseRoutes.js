@@ -8,7 +8,7 @@ const {
   deleteEnterprise,
 } = require("../Controller/EnterpriseController");
 const isSuperAdmin = require("../middleware/isSuperAdmin");
-const { authmiddleware } = require("../middleware/authMiddleware");
+const authmiddleware = require("../middleware/authMiddleware");
 
 // Routes
 router.post("/create", authmiddleware, isSuperAdmin, createEnterprise);

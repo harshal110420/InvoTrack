@@ -9,7 +9,7 @@ const {
 } = require("../Controller/TaxConfigController");
 
 const isSuperAdmin = require("../middleware/isSuperAdmin");
-const {authmiddleware} = require("../middleware/authMiddleware"); // If using JWT auth
+const authmiddleware = require("../middleware/authMiddleware"); // If using JWT auth
 
 // Routes
 router.post("/", authmiddleware, isSuperAdmin, createTaxConfig); // Create Tax Config

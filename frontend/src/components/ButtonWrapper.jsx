@@ -1,17 +1,20 @@
-import { rolePermissionsConfig } from "../config/rolePermissionsConfig";
 import { useAuth } from "../context/AuthContext";
+import { useSelector } from "react-redux";
 
 const ButtonWrapper = ({ module, subModule, permission, children }) => {
   const { user } = useAuth();
   const role = user?.role;
 
-  // Hardcoded config check
-  const hasPermission =
-    rolePermissionsConfig?.[role]?.modules?.[module]?.[subModule]?.includes(
-      permission
-    );
+  const { modules } = useSelector((state) => state.permission);
 
-  if (!hasPermission) return null; // Don't render if no access
+  // If no permission state loaded yet
+  if (!modules || !modules[module]) return null;
+
+  const subPermissions = modules[module]?.[subModule] || [];
+
+  const hasPermission = subPermissions.includes(permission);
+
+  if (!hasPermission) return null;
 
   return <>{children}</>;
 };
