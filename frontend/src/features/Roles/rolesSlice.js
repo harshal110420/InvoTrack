@@ -6,7 +6,8 @@ export const fetchRoles = createAsyncThunk(
   "roles/fetchRoles",
   async (_, thunkAPI) => {
     try {
-      const response = await axiosInstance.get("/role/all"); 
+      const response = await axiosInstance.get("/roles/all");
+      console.log("🔁 API raw response: ", response.data);
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(
@@ -34,10 +35,11 @@ const roleSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchRoles.fulfilled, (state, action) => {
-        console.log("✅ Fetched Roles:", action.payload);
-        state.roles = action.payload;
+        console.log("🛠️ Roles data received:", action.payload); // Check the action payload
         state.loading = false;
+        state.roles = action.payload?.roles || []; // ✅ Pick the roles array from response
       })
+
       .addCase(fetchRoles.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || "Something went wrong";

@@ -2,7 +2,7 @@ import { useParams, Outlet, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useSelector } from "react-redux";
 import Sidebar from "../components/Sidebar";
-import ModuleRoutes from "./ModuleRoutes";
+import ModuleRoutes from "../routes/ModuleRoutes";
 
 
 
