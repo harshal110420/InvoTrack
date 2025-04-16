@@ -9,7 +9,7 @@ const ModuleRoutes = () => {
     <Routes>
       <Route path="role_management" element={<RolesPage />} />
       <Route path="role_management/create" element={<RoleForm />} />
-      <Route path="role_management/update/:id" element={<RoleForm />} />
+      <Route path="role_management/update/:roleId" element={<RoleForm />} />
       {/* Add more module-specific routes here */}
     </Routes>
   );

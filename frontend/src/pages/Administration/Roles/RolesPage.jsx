@@ -17,114 +17,86 @@ const RolesPage = () => {
   }, [dispatch]);
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Manage Roles</h2>
-
-      <ButtonWrapper
-        module="Administration"
-        subModule="Role Management"
-        permission="new"
-      >
-        <button
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg mb-4"
-          onClick={() => navigate("/module/admin-module/role_management/create")}
+    <div className="p-1 bg-white rounded-xl shadow-sm">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-semibold tracking-tight">Manage Roles</h2>
+        <ButtonWrapper
+          module="Administration"
+          subModule="Role Management"
+          permission="new"
         >
-          + Create Role
-        </button>
-      </ButtonWrapper>
+          <button
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
+            onClick={() =>
+              navigate("/module/admin-module/role_management/create")
+            }
+          >
+            Create Role
+          </button>
+        </ButtonWrapper>
+      </div>
 
-      {/* Loading / Error */}
-      {loading && <p>Loading roles...</p>}
-      {error && <p className="text-red-500">Error: {error}</p>}
+      {loading && <p className="text-gray-600">Loading roles...</p>}
+      {error && <p className="text-red-600">Error: {error}</p>}
 
-      {/* Roles Table */}
       {!loading && roles.length > 0 && (
-        <table className="w-full table-auto border border-gray-300">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="border px-4 py-2">Role Name</th>
-              <th className="border px-4 py-2">Status</th>
-              <th className="border px-4 py-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {roles.map((role) => (
-              <tr key={role._id}>
-                <td className="border px-4 py-2 capitalize">
-                  {role.displayName}
-                </td>
-                <td className="border px-4 py-2 text-center">
-                  {role.status === "active" ? (
-                    <span className="inline-flex items-center gap-1 text-green-600 font-medium">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      Active
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-red-600 font-medium">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                      Inactive
-                    </span>
-                  )}
-                </td>
-
-                <td className="border px-4 py-2">
-                  <ButtonWrapper
-                    module="Administration"
-                    subModule="Role Management"
-                    permission="edit"
-                  >
-                    <button
-                      className="text-blue-600 hover:underline mr-2"
-                      onClick={() => navigate(`/module/admin-module/role_management/update/${role._id}`)}
-                    >
-                      Edit
-                    </button>
-                  </ButtonWrapper>
-                  {/* <ButtonWrapper
-                    module="Administration"
-                    subModule="Role Management"
-                    permission="delete"
-                  >
-                    <button className="text-red-600 hover:underline">
-                      Delete
-                    </button>
-                  </ButtonWrapper> */}
-                </td>
+        <div className="overflow-x-auto rounded-lg border border-gray-200">
+          <table className="min-w-full text-sm text-left">
+            <thead className="bg-gray-100 text-gray-700">
+              <tr>
+                <th className="px-4 py-3 border-b">Role Name</th>
+                <th className="px-4 py-3 border-b text-center">Status</th>
+                <th className="px-4 py-3 border-b text-center">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {roles.map((role) => (
+                <tr key={role._id} className="hover:bg-gray-50">
+                  <td className="px-4 py-2 capitalize">{role.displayName}</td>
+                  <td className="px-4 py-2 text-center">
+                    {role.status === "active" ? (
+                      <span className="inline-flex items-center gap-1 text-green-600 font-medium">
+                        ✅ Active
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-red-600 font-medium">
+                        ❌ Inactive
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-2 text-center">
+                    <ButtonWrapper
+                      module="Administration"
+                      subModule="Role Management"
+                      permission="edit"
+                    >
+                      <button
+                        onClick={() =>
+                          navigate(
+                            `/module/admin-module/role_management/update/${role._id}`
+                          )
+                        }
+                        className="mr-2"
+                        title="Edit"
+                      >
+                        ✏️
+                      </button>
+                    </ButtonWrapper>
+
+                    {/* Add Delete later if needed */}
+                    {/* <ButtonWrapper ...>
+                      <button className="text-red-600 hover:underline">🗑️</button>
+                    </ButtonWrapper> */}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
-      {/* No roles message */}
       {!loading && roles.length === 0 && (
-        <p className="text-gray-500">No roles found.</p>
+        <p className="text-gray-500 text-center py-4">No roles found.</p>
       )}
     </div>
   );
