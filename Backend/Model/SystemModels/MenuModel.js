@@ -7,13 +7,15 @@ const MenuSchema = new mongoose.Schema({
     required: true,
     ref: "Module",
   }, // Foreign key
-  name: { type: String, required: true }, // "Account Master"
+  name: { type: String, required: true }, // "Menus name"
   type: {
     type: String,
     enum: ["Master", "Transaction", "Report"],
     required: true,
   }, // Master/Transaction/Report
   menuId: { type: String, required: true, unique: true }, // "accountmaster"
+  isActive: { type: Boolean, default: true },
+  orderBy: { type: Number }, // Sorting Order
 });
 
 module.exports = mongoose.model("Menu", MenuSchema);

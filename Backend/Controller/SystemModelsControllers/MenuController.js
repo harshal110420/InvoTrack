@@ -1,4 +1,38 @@
 const Menu = require("../../Model/SystemModels/MenuModel");
+const Module = require("../../Model/SystemModels/ModuleModel");
+
+const getAllMenusGrouped = async (req, res) => {
+  try {
+    const menus = await Menu.find().populate("moduleId");
+
+    const grouped = {};
+
+    menus.forEach((menu) => {
+      const moduleName = menu.moduleId.name; // from populated field
+      const category = menu.type || "Uncategorized";
+
+      if (!grouped[moduleName]) {
+        grouped[moduleName] = {};
+      }
+
+      if (!grouped[moduleName][category]) {
+        grouped[moduleName][category] = [];
+      }
+
+      grouped[moduleName][category].push({
+        _id: menu._id,
+        name: menu.name,
+        path: menu.path,
+        actions: menu.actions, // optional: view/create/edit/delete etc.
+      });
+    });
+
+    res.json(grouped);
+  } catch (err) {
+    console.error("Error in getAllMenusGrouped:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 
 // ✅ Get all menus for a module
 const getMenusByModule = async (req, res) => {
@@ -44,6 +78,7 @@ const deleteMenu = async (req, res) => {
 };
 
 module.exports = {
+  getAllMenusGrouped,
   getMenusByModule,
   createMenu,
   updateMenu,

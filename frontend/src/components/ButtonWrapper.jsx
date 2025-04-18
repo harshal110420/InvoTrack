@@ -1,7 +1,7 @@
 import { useAuth } from "../context/AuthContext";
 import { useSelector } from "react-redux";
 
-const ButtonWrapper = ({ module, subModule, permission, children }) => {
+const ButtonWrapper = ({ subModule, permission, children }) => {
   const { user } = useAuth();
   const role = user?.role;
   const { modules } = useSelector((state) => state.permission);
@@ -9,46 +9,43 @@ const ButtonWrapper = ({ module, subModule, permission, children }) => {
   console.log("🧠 ButtonWrapper Debug:");
   console.log("User Role:", role);
   console.log("Modules:", modules);
-  console.log("Checking:", { module, subModule, permission });
+  console.log("Checking SubModule & Permission:", { subModule, permission });
 
-  const moduleObj = Array.isArray(modules)
-    ? modules.find(
-        (mod) => mod.moduleName === module || mod.modulePath === module
-      )
-    : null;
-
-  if (!moduleObj) {
-    console.log("❌ Module not found in permission state");
+  if (!Array.isArray(modules) || !subModule || !permission) {
+    console.log("❌ Invalid props or permissions data");
     return null;
   }
 
+  let matchedModule = null;
+  let foundMenu = null;
   let actions = [];
 
-  const allMenus = moduleObj.menus;
-
-  if (subModule) {
-    // Search in all menu types (Master, Transaction, Report)
-    for (let type of ["Master", "Transaction", "Report"]) {
-      const menuList = allMenus[type] || [];
-      const foundMenu = menuList.find(
+  for (const mod of modules) {
+    for (const type of ["Master", "Transaction", "Report"]) {
+      const menuList = mod.menus?.[type] || [];
+      const match = menuList.find(
         (menu) => menu.name === subModule || menu.menuId === subModule
       );
-      if (foundMenu) {
-        actions = foundMenu.actions || [];
+      if (match) {
+        matchedModule = mod.moduleName || mod.modulePath;
+        foundMenu = match;
+        actions = match.actions || [];
         break;
       }
     }
-  } else {
-    // No subModule, check all actions in all menus
-    actions = Object.values(allMenus)
-      .flat()
-      .flatMap((menu) => menu.actions || []);
+    if (foundMenu) break;
+  }
+
+  if (!foundMenu) {
+    console.log("❌ SubModule not found in any module");
+    return null;
   }
 
   const hasPermission = actions.includes(permission);
 
-  console.log("Actions Found:", actions);
-  console.log("Permission Allowed?", hasPermission);
+  console.log(`✅ Matched Module: ${matchedModule}`);
+  console.log("🛠️ Menu Actions:", actions);
+  console.log("🔐 Has Permission:", hasPermission);
 
   if (!hasPermission) return null;
 
