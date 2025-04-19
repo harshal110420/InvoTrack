@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axiosInstance from "../../api/axiosInstance"; // correct path accordingly
+import axiosInstance from "../../api/axiosInstance"; // ✅ Use this consistently
 
 // 🔽 1. Fetch Grouped Menus
 export const fetchGroupedMenus = createAsyncThunk(
@@ -11,7 +11,7 @@ export const fetchGroupedMenus = createAsyncThunk(
       const flattened = [];
       Object.entries(data).forEach(([moduleName, categories]) => {
         Object.entries(categories).forEach(([category, menus]) => {
-          menus.forEach(menu => {
+          menus.forEach((menu) => {
             flattened.push({
               id: menu._id,
               name: menu.name,
@@ -24,33 +24,46 @@ export const fetchGroupedMenus = createAsyncThunk(
 
       return flattened;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || "Something went wrong");
     }
   }
 );
 
-// 🔽 2. Create New Menu
+// 🔽 2. Fetch Menu by ID (for Edit Form)
+export const fetchMenusById = createAsyncThunk(
+  "menus/fetchMenusById",
+  async (id, { rejectWithValue }) => {
+    try {
+      const { data } = await axiosInstance.get(`/menus/${id}`);
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Something went wrong");
+    }
+  }
+);
+
+// 🔽 3. Create New Menu
 export const createMenu = createAsyncThunk(
   "menus/createMenu",
   async (formData, { rejectWithValue }) => {
     try {
-      const { data } = await axios.post("/api/menus", formData);
+      const { data } = await axiosInstance.post("/menus/create", formData);
       return data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || "Failed to create menu");
     }
   }
 );
 
-// 🔽 3. Update Menu
+// 🔽 4. Update Menu
 export const updateMenu = createAsyncThunk(
   "menus/updateMenu",
   async ({ id, updatedData }, { rejectWithValue }) => {
     try {
-      const { data } = await axios.put(`/api/menus/${id}`, updatedData);
+      const { data } = await axiosInstance.put(`/menus/${id}`, updatedData);
       return data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || "Failed to update menu");
     }
   }
 );
@@ -60,6 +73,7 @@ const menusSlice = createSlice({
   name: "menus",
   initialState: {
     list: [],
+    currentMenu: null,
     loading: false,
     error: null,
     createSuccess: false,
@@ -70,12 +84,15 @@ const menusSlice = createSlice({
       state.createSuccess = false;
       state.updateSuccess = false;
       state.error = null;
-    }
+    },
+    clearCurrentMenu: (state) => {
+      state.currentMenu = null;
+    },
   },
-  extraReducers: builder => {
+  extraReducers: (builder) => {
     builder
-      // 🔽 Fetch
-      .addCase(fetchGroupedMenus.pending, state => {
+      // 🔽 Fetch Grouped Menus
+      .addCase(fetchGroupedMenus.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
@@ -88,8 +105,22 @@ const menusSlice = createSlice({
         state.error = action.payload || "Something went wrong";
       })
 
-      // 🔽 Create
-      .addCase(createMenu.pending, state => {
+      // 🔽 Fetch Single Menu by ID
+      .addCase(fetchMenusById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchMenusById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.currentMenu = action.payload;
+      })
+      .addCase(fetchMenusById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Something went wrong";
+      })
+
+      // 🔽 Create Menu
+      .addCase(createMenu.pending, (state) => {
         state.loading = true;
         state.createSuccess = false;
       })
@@ -109,17 +140,18 @@ const menusSlice = createSlice({
         state.error = action.payload || "Failed to create menu";
       })
 
-      // 🔽 Update
-      .addCase(updateMenu.pending, state => {
+      // 🔽 Update Menu
+      .addCase(updateMenu.pending, (state) => {
         state.loading = true;
         state.updateSuccess = false;
       })
       .addCase(updateMenu.fulfilled, (state, action) => {
         state.loading = false;
         state.updateSuccess = true;
-
         const updatedMenu = action.payload;
-        const index = state.list.findIndex(menu => menu.id === updatedMenu._id);
+        const index = state.list.findIndex(
+          (menu) => menu.id === updatedMenu._id
+        );
         if (index !== -1) {
           state.list[index] = {
             id: updatedMenu._id,
@@ -137,5 +169,5 @@ const menusSlice = createSlice({
   },
 });
 
-export const { resetMenuStatus } = menusSlice.actions;
+export const { resetMenuStatus, clearCurrentMenu } = menusSlice.actions;
 export default menusSlice.reducer;

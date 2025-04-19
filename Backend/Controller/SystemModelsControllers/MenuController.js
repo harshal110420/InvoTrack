@@ -77,10 +77,27 @@ const deleteMenu = async (req, res) => {
   }
 };
 
+// ✅ Get single menu by ID
+const getMenuById = async (req, res) => {
+  try {
+    const menu = await Menu.findById(req.params.id).populate("moduleId");
+
+    if (!menu) {
+      return res.status(404).json({ error: "Menu not found" });
+    }
+
+    res.json(menu);
+  } catch (err) {
+    console.error("Error in getMenuById:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   getAllMenusGrouped,
   getMenusByModule,
   createMenu,
   updateMenu,
   deleteMenu,
+  getMenuById
 };
