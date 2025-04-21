@@ -34,7 +34,7 @@ export const fetchMenusById = createAsyncThunk(
   "menus/fetchMenusById",
   async (id, { rejectWithValue }) => {
     try {
-      const { data } = await axiosInstance.get(`/menus/${id}`);
+      const { data } = await axiosInstance.get(`/menus/get/${id}`);
       return data;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Something went wrong");
@@ -60,7 +60,7 @@ export const updateMenu = createAsyncThunk(
   "menus/updateMenu",
   async ({ id, updatedData }, { rejectWithValue }) => {
     try {
-      const { data } = await axiosInstance.put(`/menus/${id}`, updatedData);
+      const { data } = await axiosInstance.put(`/menus/update/${id}`, updatedData);
       return data;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Failed to update menu");
@@ -73,7 +73,7 @@ const menusSlice = createSlice({
   name: "menus",
   initialState: {
     list: [],
-    currentMenu: null,
+    menuById : null,
     loading: false,
     error: null,
     createSuccess: false,
@@ -86,7 +86,7 @@ const menusSlice = createSlice({
       state.error = null;
     },
     clearCurrentMenu: (state) => {
-      state.currentMenu = null;
+      state.menuById  = null;
     },
   },
   extraReducers: (builder) => {
@@ -112,7 +112,7 @@ const menusSlice = createSlice({
       })
       .addCase(fetchMenusById.fulfilled, (state, action) => {
         state.loading = false;
-        state.currentMenu = action.payload;
+        state.menuById  = action.payload;
       })
       .addCase(fetchMenusById.rejected, (state, action) => {
         state.loading = false;

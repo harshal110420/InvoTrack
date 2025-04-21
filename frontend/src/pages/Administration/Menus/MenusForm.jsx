@@ -4,6 +4,8 @@ import {
   createMenu,
   updateMenu,
   resetMenuStatus,
+  fetchGroupedMenus,
+  fetchMenusById,
 } from "../../../features/menus/menuSlice";
 import { fetchModules } from "../../../features/Modules/ModuleSlice";
 import { useNavigate, useParams } from "react-router-dom";
@@ -21,8 +23,9 @@ const MenuForm = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { id } = useParams(); // for edit
-
+  const isEditMode = Boolean(id); // check if we are in edit mode
   const [formData, setFormData] = useState(initialFormData);
+  const { menuById } = useSelector((state) => state.menus);
 
   const {
     createSuccess,
@@ -36,35 +39,54 @@ const MenuForm = () => {
     (state) => state.modules
   );
 
-  // 🔽 Fetch modules on load
   useEffect(() => {
     dispatch(fetchModules());
-  }, [dispatch]);
+
+    if (id) {
+      dispatch(fetchMenusById(id));
+    }
+
+    dispatch(fetchGroupedMenus());
+  }, [dispatch, id]);
 
   // 🔽 Handle edit mode
   useEffect(() => {
-    if (id) {
-      const menuToEdit = menuList.find((m) => m.id === id);
-      if (menuToEdit) {
-        setFormData({
-          name: menuToEdit.name,
-          module: menuToEdit.module,
-          category: menuToEdit.category,
-          menuId: menuToEdit.menuId,
-          isActive: menuToEdit.isActive,
-          orderBy: menuToEdit.orderBy || "",
-        });
-      }
+    if (isEditMode && menuById && Object.keys(menuById).length > 0) {
+      setFormData({
+        name: menuById.name || "",
+        module: menuById.moduleId?.name || "", // Use moduleId.name if it's an object
+        category: menuById.type || "",
+        menuId: menuById.menuId || "",
+        isActive: menuById.isActive ?? true,
+        orderBy: menuById.orderBy || "",
+      });
     }
-  }, [id, menuList]);
+  }, [isEditMode, menuById]);
+
+  useEffect(() => {
+    console.log("Fetched menuById from store:", menuById);
+  }, [menuById]);
 
   // 🔽 Form Submit
   const handleSubmit = (e) => {
     e.preventDefault();
+    // 🔧 Build payload as per backend expectations
+    const selectedModule = moduleList.find((m) => m.name === formData.module);
+
+    const payload = {
+      name: formData.name,
+      menuId: formData.menuId,
+      type: formData.category, // category is same as backend's "type"
+      moduleId: selectedModule?._id, // 💡 must be ObjectId, not name
+      parentCode: "root", // defaulting to root for now
+      orderBy: parseInt(formData.orderBy || "0"), // assuming orderBy is optional
+      isActive: formData.isActive,
+    };
     if (id) {
-      dispatch(updateMenu({ id, updatedData: formData }));
+      dispatch(updateMenu({ id, updatedData: payload }));
     } else {
-      dispatch(createMenu(formData));
+      console.log("Form Data Being Submitted: ", payload);
+      dispatch(createMenu(payload));
     }
   };
 
@@ -81,7 +103,7 @@ const MenuForm = () => {
   useEffect(() => {
     if (createSuccess || updateSuccess) {
       dispatch(resetMenuStatus());
-      navigate("/menus"); // Change path as per your route
+      navigate("/module/system-module/menu_management"); // Change path as per your route
     }
   }, [createSuccess, updateSuccess, dispatch, navigate]);
 

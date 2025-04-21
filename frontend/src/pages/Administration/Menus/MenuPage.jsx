@@ -70,7 +70,7 @@ const MenuPage = () => {
                       <button
                         onClick={() =>
                           navigate(
-                            `/module/admin-module/role_management/update/${role._id}`
+                            `/module/system-module/menu_management/update/${menu.id}`
                           )
                         }
                         className="mr-2"
