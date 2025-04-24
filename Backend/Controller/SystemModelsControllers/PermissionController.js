@@ -1,15 +1,22 @@
 const Permission = require("../../Model/SystemModels/PermissionModel");
-const Menu = require("../../Model/SystemModels/MenuModel"); // 👈 ADD THIS
-const Module = require("../../Model/SystemModels/ModuleModel"); // 👈 ADD THIS
-
+const Menu = require("../../Model/SystemModels/MenuModel");
+const Module = require("../../Model/SystemModels/ModuleModel");
+const role = require("../../Model/SystemConfigureModel/RoleModel");
 const VALID_ACTIONS = ["new", "edit", "view", "print", "delete", "export"];
 
 // ✅ Get permissions for a role
 const getPermissionsByRole = async (req, res) => {
   console.log("🔥 API HIT: getPermissionsByRole");
   try {
+    // ✅ Step 1: Find Role ObjectId using name
+    const roleDoc = await role.findOne({ roleName: req.params.role });
+    console.log("🧠 Finding Role by name:", req.params.role);
+
+    if (!roleDoc) {
+      return res.status(404).json({ error: "Role not found" });
+    }
     const rawPermissions = await Permission.find({
-      role: req.params.role,
+      role: roleDoc._id,
       menuId: { $ne: null },
     })
       .populate({
@@ -20,7 +27,7 @@ const getPermissionsByRole = async (req, res) => {
         },
       })
       .lean();
-    console.log(rawPermissions);
+    console.log("🎯 Permissions fetched:", rawPermissions.length);
 
     // ✅ Transform to structured response
     const structured = {};
@@ -63,6 +70,43 @@ const getPermissionsByRole = async (req, res) => {
     res.json(response);
   } catch (err) {
     console.error("❌ Error while fetching structured permissions:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+// ✅ Get a specific permission by ID (for update or view)
+const getPermissionById = async (req, res) => {
+  try {
+    const permission = await Permission.findById(req.params.id)
+      .populate({
+        path: "menuId",
+        populate: {
+          path: "moduleId",
+          model: "Module",
+        },
+      })
+      .lean();
+
+    if (!permission) {
+      return res.status(404).json({ error: "Permission not found" });
+    }
+
+    const { role, menuId, actions } = permission;
+
+    // Prepare response with structured permission info
+    const structuredPermission = {
+      role,
+      menu: {
+        name: permission.menuId.name,
+        type: permission.menuId.type,
+        moduleName: permission.menuId.moduleId.name,
+        actions,
+      },
+    };
+
+    res.json(structuredPermission);
+  } catch (err) {
+    console.error("❌ Error while fetching permission:", err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -141,6 +185,75 @@ const createOrUpdatePermission = async (req, res) => {
   }
 };
 
+// ✅ Get all permissions (across all roles)
+const getAllPermissions = async (req, res) => {
+  try {
+    const allPermissions = await Permission.find()
+      .populate({
+        path: "menuId",
+        populate: {
+          path: "moduleId",
+          model: "Module",
+        },
+      })
+      .populate("role", "displayName") // ✅ Add this line to populate role details
+      .lean();
+
+    const organized = {};
+
+    allPermissions.forEach((perm) => {
+      const module = perm.menuId?.moduleId;
+      const menu = perm.menuId;
+      const role = perm.role;
+
+      if (!module || !menu) return; // Skip incomplete data
+
+      const moduleId = module._id.toString();
+      const menuId = menu._id.toString();
+      const roleId = role._id.toString(); // ✅ Correctly use _id as key
+
+      // Initialize module if not present
+      if (!organized[moduleId]) {
+        organized[moduleId] = {
+          moduleName: module.name,
+          modulePath: module.path,
+          orderBy: module.orderBy || 99,
+          roles: {}, // role-wise permissions
+        };
+      }
+
+      // Initialize role under this module
+      if (!organized[moduleId].roles[roleId]) {
+        organized[moduleId].roles[roleId] = {
+          roleId,
+          roleName: role.displayName,
+          permissions: [],
+        };
+      }
+
+      // Add permission entry
+      organized[moduleId].roles[roleId].permissions.push({
+        menuName: menu.name,
+        menuType: menu.type,
+        menuId,
+        actions: perm.actions,
+      });
+    });
+
+    const result = Object.values(organized)
+      .sort((a, b) => a.orderBy - b.orderBy)
+      .map((mod) => ({
+        ...mod,
+        roles: Object.values(mod.roles),
+      }));
+
+    res.json(result);
+  } catch (err) {
+    console.error("❌ Error while fetching all permissions:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 // ✅ Delete permissions
 const deletePermission = async (req, res) => {
   try {
@@ -153,6 +266,8 @@ const deletePermission = async (req, res) => {
 
 module.exports = {
   getPermissionsByRole,
+  getAllPermissions,
+  getPermissionById, // Added function to get permission by ID
   createOrUpdatePermission,
   deletePermission,
 };

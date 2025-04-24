@@ -6,10 +6,10 @@ const ButtonWrapper = ({ subModule, permission, children }) => {
   const role = user?.role;
   const { modules } = useSelector((state) => state.permission);
 
-  console.log("🧠 ButtonWrapper Debug:");
-  console.log("User Role:", role);
-  console.log("Modules:", modules);
-  console.log("Checking SubModule & Permission:", { subModule, permission });
+  // console.log("🧠 ButtonWrapper Debug:");
+  // console.log("User Role:", role);
+  // console.log("Modules:", modules);
+  // console.log("Checking SubModule & Permission:", { subModule, permission });
 
   if (!Array.isArray(modules) || !subModule || !permission) {
     console.log("❌ Invalid props or permissions data");
@@ -43,9 +43,9 @@ const ButtonWrapper = ({ subModule, permission, children }) => {
 
   const hasPermission = actions.includes(permission);
 
-  console.log(`✅ Matched Module: ${matchedModule}`);
-  console.log("🛠️ Menu Actions:", actions);
-  console.log("🔐 Has Permission:", hasPermission);
+  // console.log(`✅ Matched Module: ${matchedModule}`);
+  // console.log("🛠️ Menu Actions:", actions);
+  // console.log("🔐 Has Permission:", hasPermission);
 
   if (!hasPermission) return null;
 

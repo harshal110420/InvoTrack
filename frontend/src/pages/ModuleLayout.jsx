@@ -9,9 +9,9 @@ import ModuleRoutes from "../routes/ModuleRoutes";
 const ModuleLayout = () => {
   const { user } = useAuth();
   const { moduleName } = useParams();
-  console.log(moduleName, "Module Name from URL");
+  // console.log(moduleName, "Module Name from URL");
   const { modules } = useSelector((state) => state.permission); // Use Redux state
-  console.log(modules, "Modules from Redux in ModuleLayout");
+  // console.log(modules, "Modules from Redux in ModuleLayout");
 
   if (!user) return <Navigate to="/" />;
 

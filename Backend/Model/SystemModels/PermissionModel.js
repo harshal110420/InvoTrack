@@ -3,7 +3,7 @@ const { Schema, model } = require("mongoose");
 
 const PermissionSchema = new mongoose.Schema(
   {
-    role: { type: String, required: true, ref: "Role" }, // Link to Role
+    role: { type: Schema.Types.ObjectId, required: true, ref: "Role" }, // Link to Role
     menuId: { type: Schema.Types.ObjectId, required: true, ref: "Menu" }, // ✅ ObjectId hona chahiye
     actions: [
       {

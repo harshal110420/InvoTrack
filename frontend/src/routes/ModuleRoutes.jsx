@@ -1,8 +1,9 @@
 import { Routes, Route } from "react-router-dom";
 import RolesPage from "../pages/Administration/Roles/RolesPage";
 import RoleForm from "../pages/Administration/Roles/RoleForm"; // 👈 Import the RoleForm component
-import MenuPage from "../pages/Administration/Menus/MenuPage";
-import MenuForm from "../pages/Administration/Menus/MenusForm";
+import MenuPage from "../pages/System/Menus/MenuPage";
+import MenuForm from "../pages/System/Menus/MenusForm";
+import PermissionsPage from "../pages/System/Permission/PermissionPage";
 
 // Import more pages as needed
 
@@ -12,9 +13,14 @@ const ModuleRoutes = () => {
       <Route path="role_management" element={<RolesPage />} />
       <Route path="role_management/create" element={<RoleForm />} />
       <Route path="role_management/update/:roleId" element={<RoleForm />} />
+
       <Route path="menu_management" element={<MenuPage />} />
       <Route path="/menu_management/create" element={<MenuForm />} />
       <Route path="/menu_management/update/:id" element={<MenuForm />} />
+
+      <Route path="permission_management" element={<PermissionsPage />} />
+      {/* <Route path="/permission_management/create" element={<MenuForm />} />
+      <Route path="/permission_management/update/:id" element={<MenuForm />} /> */}
 
       {/* Add more module-specific routes here */}
     </Routes>
