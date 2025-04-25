@@ -1,15 +1,17 @@
 const Permission = require("../../Model/SystemModels/PermissionModel");
 const Menu = require("../../Model/SystemModels/MenuModel");
 const Module = require("../../Model/SystemModels/ModuleModel");
-const role = require("../../Model/SystemConfigureModel/RoleModel");
+const Role = require("../../Model/SystemConfigureModel/RoleModel");
 const VALID_ACTIONS = ["new", "edit", "view", "print", "delete", "export"];
+const mongoose = require("mongoose");
+const { Types } = require("mongoose");
 
 // ✅ Get permissions for a role
 const getPermissionsByRole = async (req, res) => {
   console.log("🔥 API HIT: getPermissionsByRole");
   try {
     // ✅ Step 1: Find Role ObjectId using name
-    const roleDoc = await role.findOne({ roleName: req.params.role });
+    const roleDoc = await Role.findOne({ roleName: req.params.role });
     console.log("🧠 Finding Role by name:", req.params.role);
 
     if (!roleDoc) {
@@ -114,16 +116,19 @@ const getPermissionById = async (req, res) => {
 // ✅ Create or update permissions
 const createOrUpdatePermission = async (req, res) => {
   try {
-    const { role, menuId, actions, actionType = "replace" } = req.body;
+    const {
+      role: roleName,
+      menuId,
+      actions,
+      actionType = "replace",
+    } = req.body;
 
-    // ✅ Step 1: Input validation
-    if (!role || !menuId || !Array.isArray(actions)) {
+    if (!roleName || !menuId || !Array.isArray(actions)) {
       return res.status(400).json({
         error: "Fields 'role', 'menuId', and 'actions[]' are required.",
       });
     }
 
-    // ✅ Step 2: Check if actions are valid
     const invalidActions = actions.filter(
       (action) => !VALID_ACTIONS.includes(action)
     );
@@ -133,39 +138,47 @@ const createOrUpdatePermission = async (req, res) => {
       });
     }
 
-    // ✅ Step 3: Fetch existing permission
-    let permission = await Permission.findOne({ role, menuId });
+    const roleDoc = await Role.findOne({ displayName: roleName });
+    if (!roleDoc) {
+      return res.status(404).json({ error: "Role not found" });
+    }
 
-    // ✅ User ID from logged-in user or fallback
+    const menuDoc = await Menu.findOne({ menuId });
+    if (!menuDoc) {
+      return res.status(404).json({ error: "Menu not found for given menuId" });
+    }
+
+    const objectMenuId = menuDoc._id;
+    let permission = await Permission.findOne({
+      role: roleDoc._id,
+      menuId: objectMenuId,
+    });
+
     const userId = req.user?._id || "system";
 
     if (permission) {
-      // 🔁 If permission exists, handle update based on actionType
       if (actionType === "add") {
         permission.actions = [...new Set([...permission.actions, ...actions])];
       } else if (actionType === "remove") {
         permission.actions = permission.actions.filter(
-          (action) => !actions.includes(action)
+          (a) => !actions.includes(a)
         );
       } else {
-        // default: replace
         permission.actions = actions;
       }
 
       permission.updatedBy = userId;
       await permission.save();
     } else {
-      // ⚠️ If trying to remove on non-existing permission
       if (actionType === "remove") {
         return res.status(400).json({
           error: "Cannot remove actions from a non-existent permission.",
         });
       }
 
-      // ✅ Create new permission
       permission = new Permission({
-        role,
-        menuId,
+        role: roleDoc._id,
+        menuId: objectMenuId,
         actions,
         createdBy: userId,
       });
@@ -173,15 +186,14 @@ const createOrUpdatePermission = async (req, res) => {
       await permission.save();
     }
 
-    return res.status(201).json({
-      message: "Permission saved successfully",
-      permission,
-    });
+    return res
+      .status(201)
+      .json({ message: "Permission saved successfully", permission });
   } catch (err) {
-    return res.status(500).json({
-      error: "Internal Server Error",
-      details: err.message,
-    });
+    console.error("❌ Error:", err);
+    return res
+      .status(500)
+      .json({ error: "Internal Server Error", details: err.message });
   }
 };
 

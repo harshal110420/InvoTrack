@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   fetchAllPermissions,
   savePermission,
+  resetPermissions,
 } from "../../../features/permissions/permissionSlice";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
@@ -13,9 +14,8 @@ const PermissionForm = ({ selectedRole, onClose }) => {
   const { modules: permissions, loading } = useSelector(
     (state) => state.permission
   );
-  console.log(permissions, "permissions from redux");
+  console.log("Menus permission check from API :", permissions);
   console.log(selectedRole, "selectedRole from redux");
-
 
   const [expandedModules, setExpandedModules] = useState({});
   const [localPermissions, setLocalPermissions] = useState({});
@@ -118,6 +118,7 @@ const PermissionForm = ({ selectedRole, onClose }) => {
 
     try {
       await Promise.all(requests);
+      dispatch(resetPermissions());
       onClose(); // Close form after all updates are successful
     } catch (err) {
       console.error("Permission update error:", err);

@@ -26,6 +26,7 @@ export const fetchAllPermissions = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const response = await axiosInstance.get(`/permission/getAll`);
+      console.log("Permissions Fetched of response data:", response.data);
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(
@@ -62,7 +63,15 @@ const permissionSlice = createSlice({
     saving: false,
     error: null,
   },
-  reducers: {},
+  reducers: {
+    resetPermissions: (state) => {
+      state.modules = [];
+      state.allPermissions = [];
+      state.loading = false;
+      state.saving = false;
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       // 🔄 FETCH structured permissions (dashboard)
@@ -105,5 +114,6 @@ const permissionSlice = createSlice({
       });
   },
 });
+export const { resetPermissions } = permissionSlice.actions; // Export resetPermissions action
 
 export default permissionSlice.reducer;
