@@ -14,14 +14,14 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (user?.role) {
-      console.log("Dispatching permission fetch for role:", user.role);
+      // console.log("Dispatching permission fetch for role:", user.role);
       dispatch(fetchPermissions(user.role)).then((res) => {
-        console.log("👀 Permissions Fetched:", res);
+        // console.log("👀 Permissions Fetched:", res);
       });
     }
   }, [user, dispatch]);
-  console.log("User:", user);
-  console.log("Modules from Redux:", modules);
+  // console.log("User:", user);
+  // console.log("Modules from Redux:", modules);
   if (!user) return null;
 
   const handleLogoutClick = () => {

@@ -1,8 +1,8 @@
 const checkPermission = (requiredPermission) => {
   return (req, res, next) => {
     try {
-      console.log("🔐 Permission Check Middleware Called");
-      console.log("👤 User in req:", req.user);
+      // console.log("🔐 Permission Check Middleware Called");
+      // console.log("👤 User in req:", req.user);
 
       if (!req.user || !req.user.role || !req.user.role.permissions) {
         return res
@@ -11,16 +11,16 @@ const checkPermission = (requiredPermission) => {
       }
 
       const userPermissions = req.user.role.permissions;
-      console.log("📜 User Permissions:", userPermissions);
+      // console.log("📜 User Permissions:", userPermissions);
 
       if (!userPermissions.includes(requiredPermission)) {
-        console.log(`🚫 Missing required permission: ${requiredPermission}`);
+        // console.log(`🚫 Missing required permission: ${requiredPermission}`);
         return res
           .status(403)
           .json({ message: "Access denied: Missing permission" });
       }
 
-      console.log(`✅ Permission granted for: ${requiredPermission}`);
+      // console.log(`✅ Permission granted for: ${requiredPermission}`);
       next();
     } catch (error) {
       console.error("❌ Permission check error:", error);

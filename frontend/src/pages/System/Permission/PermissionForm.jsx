@@ -11,11 +11,12 @@ const actionList = ["view", "new", "edit", "delete", "print", "export"];
 
 const PermissionForm = ({ selectedRole, onClose }) => {
   const dispatch = useDispatch();
-  const { modules: permissions, loading } = useSelector(
+  const { allPermissions: permissions, loading } = useSelector(
     (state) => state.permission
   );
-  console.log("Menus permission check from API :", permissions);
-  console.log(selectedRole, "selectedRole from redux");
+
+  // Log permissions data fetched from the slice
+  console.log("Menus permission check from API:", permissions);
 
   const [expandedModules, setExpandedModules] = useState({});
   const [localPermissions, setLocalPermissions] = useState({});
@@ -23,41 +24,44 @@ const PermissionForm = ({ selectedRole, onClose }) => {
 
   useEffect(() => {
     if (selectedRole) {
+      console.log("Fetching permissions for selectedRole:", selectedRole);
       dispatch(fetchAllPermissions(selectedRole));
     }
   }, [selectedRole, dispatch]);
 
   useEffect(() => {
-    if (permissions && Object.keys(permissions).length) {
+    if (permissions && Array.isArray(permissions)) {
       const transformed = {};
-      permissions.forEach(({ moduleName, menus }) => {
+
+      permissions.forEach((module) => {
+        const moduleName = module.moduleName;
         transformed[moduleName] = {};
-        Object.entries(menus).forEach(([type, items]) => {
-          items.forEach((item) => {
-            const id =
-              typeof item.menuId === "object" ? item.menuId._id : item.menuId; // Ensure menuId is properly populated or use the ObjectId
-            const name = item.name || item.menuId.name; // just in case name isn't at top
 
-            console.log("Processing permission item:", {
-              originalMenuId: item.menuId,
-              usedId: id,
-              name,
-              actions: item.actions,
-            });
+        // Get the permissions from the first role (you mentioned roles[0] always present)
+        const modulePermissions = module.roles?.[0]?.permissions || [];
 
-            transformed[moduleName][id] = {
-              name,
-              type,
-              actions: item.actions,
-            };
-          });
+        modulePermissions.forEach((perm) => {
+          const menuId =
+            typeof perm.menuId === "object" ? perm.menuId._id : perm.menuId;
+
+          const name = perm.menuName || perm.menuId?.name || "Unnamed Menu";
+
+          const type = perm.menuType || "Other";
+
+          transformed[moduleName][menuId] = {
+            name,
+            type,
+            actions: perm.actions || [], // even if empty, show it
+          };
         });
       });
+
       setLocalPermissions(transformed);
     }
   }, [permissions]);
 
   const toggleModule = (moduleName) => {
+    console.log(`Toggling module: ${moduleName}`);
     setExpandedModules((prev) => ({
       ...prev,
       [moduleName]: !prev[moduleName],
@@ -65,11 +69,16 @@ const PermissionForm = ({ selectedRole, onClose }) => {
   };
 
   const handleCheckboxChange = (module, menuId, action) => {
+    console.log(
+      `Checkbox change: Module=${module}, MenuID=${menuId}, Action=${action}`
+    );
     setLocalPermissions((prev) => {
       const current = prev?.[module]?.[menuId]?.actions || [];
       const updated = current.includes(action)
         ? current.filter((a) => a !== action)
         : [...current, action];
+
+      console.log("Updated actions:", updated);
 
       return {
         ...prev,
@@ -89,6 +98,7 @@ const PermissionForm = ({ selectedRole, onClose }) => {
   };
 
   const handleSubmit = async () => {
+    console.log("Submitting permissions...");
     const requests = [];
 
     Object.entries(localPermissions).forEach(([moduleName, menus]) => {
@@ -100,12 +110,12 @@ const PermissionForm = ({ selectedRole, onClose }) => {
             menuId, // menuId should now be an ObjectId
             actions,
             typeofMenuId: typeof menuId,
-            isValidObjectId: /^[0-9a-fA-F]{24}$/.test(menuId), // Verify if it's a valid ObjectId
+            isValidObjectId: /^[0-9a-fA-F]{24}$/.test(menuId),
           });
           requests.push(
             dispatch(
               savePermission({
-                role: selectedRole,
+                role: selectedRole.roleName,
                 menuId, // Correctly use ObjectId here
                 actions,
                 actionType: "replace", // or "add"/"remove" as needed
@@ -118,7 +128,10 @@ const PermissionForm = ({ selectedRole, onClose }) => {
 
     try {
       await Promise.all(requests);
+      console.log("Permissions successfully updated.");
       dispatch(resetPermissions());
+      await dispatch(fetchAllPermissions(selectedRole)); // Refetch latest permissions
+
       onClose(); // Close form after all updates are successful
     } catch (err) {
       console.error("Permission update error:", err);

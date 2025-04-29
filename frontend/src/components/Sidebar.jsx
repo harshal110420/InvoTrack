@@ -7,6 +7,7 @@ const Sidebar = ({ moduleName }) => {
   const location = useLocation();
   const { user } = useAuth();
   const { modules } = useSelector((state) => state.permission);
+  console.log("Sidebar modules:", modules);
   const [openCategory, setOpenCategory] = useState(null);
 
   if (!user || !modules) return null;

@@ -4,20 +4,20 @@ const User = require("../Model/SystemConfigureModel/UserModel");
 const authmiddleware = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
-    console.log("🔐 Incoming Token:", token); // DEBUG
+    // console.log("🔐 Incoming Token:", token); // DEBUG
 
     if (!token) {
-      console.log("⛔ Token missing in header");
+      // console.log("⛔ Token missing in header");
       return res.status(401).json({ message: "Unauthorized - Token missing" });
     }
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("🔍 Decoded Token:", decoded); // DEBUG
+    // console.log("🔍 Decoded Token:", decoded); // DEBUG
 
     req.user = await User.findById(decoded.id).populate("role");
-    console.log("👤 User fetched from DB:", req.user); // DEBUG
+    // console.log("👤 User fetched from DB:", req.user); // DEBUG
 
     if (!req.user) {
-      console.log("⛔ User not found in DB");
+      // console.log("⛔ User not found in DB");
       return res.status(401).json({ message: "Unauthorized - User not found" });
     }
     next();

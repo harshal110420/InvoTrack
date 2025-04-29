@@ -9,9 +9,9 @@ import ModuleRoutes from "../routes/ModuleRoutes";
 const ModuleLayout = () => {
   const { user } = useAuth();
   const { moduleName } = useParams();
-  // console.log(moduleName, "Module Name from URL");
+  console.log("Module Name from URL (Module Layout)",moduleName);
   const { modules } = useSelector((state) => state.permission); // Use Redux state
-  // console.log(modules, "Modules from Redux in ModuleLayout");
+  console.log("Modules from Redux in ModuleLayout (Module Layout)",modules);
 
   if (!user) return <Navigate to="/" />;
 
@@ -24,7 +24,7 @@ const ModuleLayout = () => {
 
   // If module not found, return unauthorized access
   if (!currentModule) {
-    return <div className="p-4 text-red-500">🚫 Unauthorized Access</div>;
+    return <div className="p-4 text-red-500">🚫 Unauthorized Access 1</div>;
   }
 
   // Now, check if the subModules (Master, Transaction, Report) exist

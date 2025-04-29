@@ -10,7 +10,10 @@ export const fetchPermissions = createAsyncThunk(
       const response = await axiosInstance.get(
         `/permission/getPermission/${roleName}`
       );
-      console.log(response.data);
+      console.log(
+        "Permissions Fetched from fetchPermissions slice",
+        response.data
+      );
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(
@@ -21,13 +24,33 @@ export const fetchPermissions = createAsyncThunk(
 );
 
 // ✅ FETCH all permissions (for admin table view)
+// export const fetchAllPermissions = createAsyncThunk(
+//   "permission/fetchAllPermissions",
+//   async (_, thunkAPI) => {
+//     try {
+//       const response = await axiosInstance.get(`/permission/getAll`);
+//       console.log("Permissions Fetched from fetchAllPermissions slice:", response.data);
+//       return response.data;
+//     } catch (error) {
+//       return thunkAPI.rejectWithValue(
+//         error.response?.data || { message: "Unknown error" }
+//       );
+//     }
+//   }
+// );
+
+// ✅ FETCH all permissions (for admin table view)
+// Fetch all permissions and merge them with menus (including newly created ones with default empty actions)
 export const fetchAllPermissions = createAsyncThunk(
   "permission/fetchAllPermissions",
   async (_, thunkAPI) => {
     try {
+      // Fetching all permissions
       const response = await axiosInstance.get(`/permission/getAll`);
-      console.log("Permissions Fetched of response data:", response.data);
-      return response.data;
+      const allPermissions = response.data;
+      console.log("Permissions Fetched from fetchAllPermissions slice:", allPermissions);
+      // Return the permissions as-is for now
+      return allPermissions;
     } catch (error) {
       return thunkAPI.rejectWithValue(
         error.response?.data || { message: "Unknown error" }
@@ -44,6 +67,10 @@ export const savePermission = createAsyncThunk(
       const response = await axiosInstance.post(
         `/permission/create`,
         permissionData
+      );
+      console.log(
+        "Permissions Fetched from savePermission slice:",
+        response.data
       );
       return response.data;
     } catch (error) {
@@ -79,12 +106,22 @@ const permissionSlice = createSlice({
         state.loading = true;
       })
       .addCase(fetchPermissions.fulfilled, (state, action) => {
-        state.modules = action.payload;
+        if (Array.isArray(action.payload)) {
+          state.modules = action.payload;
+        } else {
+          state.modules = []; // unexpected data, better safe than sorry
+        }
         state.loading = false;
       })
+
       .addCase(fetchPermissions.rejected, (state, action) => {
+        console.warn(
+          "❌ Failed to fetch permissions:",
+          action.payload?.message
+        );
+        state.modules = []; // Safety clear
         state.loading = false;
-        state.error = action.payload?.message;
+        state.error = action.payload?.message || "Permission fetch failed.";
       })
 
       // 🔄 FETCH all permissions
