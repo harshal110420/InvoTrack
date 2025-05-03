@@ -129,7 +129,7 @@ const PermissionForm = ({ selectedRole, onClose }) => {
     try {
       await Promise.all(requests);
       console.log("Permissions successfully updated.");
-      dispatch(resetPermissions());
+      // dispatch(resetPermissions());
       await dispatch(fetchAllPermissions(selectedRole)); // Refetch latest permissions
 
       onClose(); // Close form after all updates are successful

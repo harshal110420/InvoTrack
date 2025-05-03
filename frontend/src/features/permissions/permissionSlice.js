@@ -24,22 +24,6 @@ export const fetchPermissions = createAsyncThunk(
 );
 
 // ✅ FETCH all permissions (for admin table view)
-// export const fetchAllPermissions = createAsyncThunk(
-//   "permission/fetchAllPermissions",
-//   async (_, thunkAPI) => {
-//     try {
-//       const response = await axiosInstance.get(`/permission/getAll`);
-//       console.log("Permissions Fetched from fetchAllPermissions slice:", response.data);
-//       return response.data;
-//     } catch (error) {
-//       return thunkAPI.rejectWithValue(
-//         error.response?.data || { message: "Unknown error" }
-//       );
-//     }
-//   }
-// );
-
-// ✅ FETCH all permissions (for admin table view)
 // Fetch all permissions and merge them with menus (including newly created ones with default empty actions)
 export const fetchAllPermissions = createAsyncThunk(
   "permission/fetchAllPermissions",
