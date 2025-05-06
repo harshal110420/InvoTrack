@@ -13,9 +13,9 @@ const MenuPage = () => {
     loading,
     error,
   } = useSelector((state) => state.menus); // ✅ fixed 'loading'
-  console.log("Group menus", groupedMenus);
-  console.log("MenuPage loading", loading);
-  console.log("MenuPage error", error);
+  // console.log("Group menus", groupedMenus);
+  // console.log("MenuPage loading", loading);
+  // console.log("MenuPage error", error);
 
   useEffect(() => {
     dispatch(fetchGroupedMenus());

@@ -4,8 +4,10 @@ import {
   fetchAllPermissions,
   savePermission,
   resetPermissions,
+  fetchPermissions,
 } from "../../../features/permissions/permissionSlice";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { toast } from "react-toastify";
 
 const actionList = ["view", "new", "edit", "delete", "print", "export"];
 
@@ -21,6 +23,7 @@ const PermissionForm = ({ selectedRole, onClose }) => {
   const [expandedModules, setExpandedModules] = useState({});
   const [localPermissions, setLocalPermissions] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
     if (selectedRole) {
@@ -59,6 +62,12 @@ const PermissionForm = ({ selectedRole, onClose }) => {
       setLocalPermissions(transformed);
     }
   }, [permissions]);
+
+  useEffect(() => {
+    const hasChanges =
+      JSON.stringify(localPermissions) !== JSON.stringify(permissions);
+    setHasChanges(hasChanges);
+  }, [localPermissions, permissions]);
 
   const toggleModule = (moduleName) => {
     console.log(`Toggling module: ${moduleName}`);
@@ -129,12 +138,17 @@ const PermissionForm = ({ selectedRole, onClose }) => {
     try {
       await Promise.all(requests);
       console.log("Permissions successfully updated.");
-      // dispatch(resetPermissions());
-      await dispatch(fetchAllPermissions(selectedRole)); // Refetch latest permissions
+      toast.success("Permissions updated successfully!");
+      // ✅ Refetch all for localPermissions view
+      await dispatch(fetchAllPermissions(selectedRole));
+
+      // ✅ Optional: Also fetch single-role permissions if needed
+      await dispatch(fetchPermissions(selectedRole.roleName));
 
       onClose(); // Close form after all updates are successful
     } catch (err) {
       console.error("Permission update error:", err);
+      toast.error("Failed to update permissions!");
     }
   };
 
@@ -143,7 +157,35 @@ const PermissionForm = ({ selectedRole, onClose }) => {
       menu.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-  if (loading || !selectedRole) return <p className="p-4">Loading...</p>;
+  if (loading || !selectedRole) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 text-center">
+        <svg
+          className="animate-spin h-8 w-8 text-blue-600 mb-3"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          ></circle>
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+          ></path>
+        </svg>
+        <p className="text-gray-500 text-sm">
+          Loading permissions, please wait...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -241,7 +283,12 @@ const PermissionForm = ({ selectedRole, onClose }) => {
         </button>
         <button
           onClick={handleSubmit}
-          className="px-6 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition shadow-md"
+          disabled={!hasChanges}
+          className={`px-6 py-2 rounded-lg text-white text-sm font-medium transition shadow-md ${
+            hasChanges
+              ? "bg-blue-600 hover:bg-blue-700"
+              : "bg-gray-400 cursor-not-allowed"
+          }`}
         >
           Save Permissions
         </button>

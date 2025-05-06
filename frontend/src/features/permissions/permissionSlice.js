@@ -7,8 +7,11 @@ export const fetchPermissions = createAsyncThunk(
   "permission/fetchPermissions",
   async (roleName, thunkAPI) => {
     try {
+      // Normalize role name: lowercased and underscores
+      const normalizedRoleName = roleName.toLowerCase().replace(/\s+/g, "_");
+
       const response = await axiosInstance.get(
-        `/permission/getPermission/${roleName}`
+        `/permission/getPermission/${normalizedRoleName}`
       );
       console.log(
         "Permissions Fetched from fetchPermissions slice",
@@ -32,7 +35,10 @@ export const fetchAllPermissions = createAsyncThunk(
       // Fetching all permissions
       const response = await axiosInstance.get(`/permission/getAll`);
       const allPermissions = response.data;
-      console.log("Permissions Fetched from fetchAllPermissions slice:", allPermissions);
+      console.log(
+        "Permissions Fetched from fetchAllPermissions slice:",
+        allPermissions
+      );
       // Return the permissions as-is for now
       return allPermissions;
     } catch (error) {

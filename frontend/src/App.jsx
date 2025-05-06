@@ -1,7 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { ToastContainer } from "react-toastify"; // ✅ Import ToastContainer
+import "react-toastify/dist/ReactToastify.css"; // ✅ Import Toastify styles
 import Dashboard from "./pages/DashboardPage";
 import ModuleLayout from "./pages/ModuleLayout";
-import PrivateRoute from "./components/PrivateRoute";
+import PrivateRoute from "./components/privateRoute";
 import { AuthProvider } from "./context/AuthContext";
 import LoginPage from "./pages/LoginPage"; // ✅ Import Login Page
 
@@ -10,9 +12,7 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          <Route path="/login" element={<LoginPage />} />{" "}
-          {/* ✅ Add Login Route */}
-          {/* 🔹 Dashboard Route */}
+          <Route path="/login" element={<LoginPage />} />
           <Route
             path="/"
             element={
@@ -21,7 +21,6 @@ function App() {
               </PrivateRoute>
             }
           />
-          {/* 🔹 Module Routes with Sidebar */}
           <Route
             path="/module/:moduleName/*"
             element={
@@ -31,6 +30,9 @@ function App() {
             }
           />
         </Routes>
+
+        {/* ToastContainer is placed here to display notifications globally */}
+        <ToastContainer position="top-right" autoClose={800} />
       </Router>
     </AuthProvider>
   );
