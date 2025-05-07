@@ -7,7 +7,7 @@ export const fetchRoles = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const response = await axiosInstance.get("/roles/all");
-      // console.log("🔁 API raw response: ", response.data);
+      console.log("🔁 API raw response for roles slice: ", response.data);
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(

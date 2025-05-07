@@ -198,25 +198,21 @@ const getAllPermissions = async (req, res) => {
   try {
     console.log("🔥 Fetching all permissions...");
 
-    // Fetch all permissions, populating both the menu and role data
     const allPermissions = await Permission.find()
       .populate({
         path: "menuId",
-        populate: {
-          path: "moduleId", // Populating the module data
-          model: "Module",
-        },
+        populate: { path: "moduleId", model: "Module" },
       })
-      .populate("role", "displayName") // Populate role details
-      .lean(); // Use lean() for faster queries
+      .populate("role", "displayName")
+      .lean();
 
-    // Fetch all menus from the database (including new ones)
-    const allMenus = await Menu.find().lean(); // This ensures new menus are also included
+    const allMenus = await Menu.find()
+      .populate("moduleId", "name path orderBy")
+      .lean();
 
-    // Initialize an object to store the organized data
     const organized = {};
 
-    // Organize all permissions into modules, roles, and menus
+    // Step 1: Structure from permissions
     allPermissions.forEach((perm) => {
       const module = perm.menuId?.moduleId;
       const menu = perm.menuId;
@@ -224,93 +220,97 @@ const getAllPermissions = async (req, res) => {
 
       if (!module || !menu) {
         console.log("⚠️ Skipping permission due to missing module/menu data.");
-        return; // Skip incomplete data
+        return;
       }
 
       const moduleId = module._id.toString();
       const menuId = menu._id.toString();
       const roleId = role._id.toString();
 
-      console.log(
-        `🔑 ModuleId: ${moduleId}, MenuId: ${menuId}, RoleId: ${roleId}`
-      );
-
-      // Initialize module if not present
       if (!organized[moduleId]) {
         organized[moduleId] = {
           moduleName: module.name,
           modulePath: module.path,
           orderBy: module.orderBy || 99,
-          roles: {}, // role-wise permissions
-        };
-        console.log(`🆕 Added new module: ${module.name}`);
-      }
-
-      // Initialize role under this module if not present
-      if (!organized[moduleId].roles[roleId]) {
-        organized[moduleId].roles[roleId] = {
-          roleId,
-          roleName: role.displayName,
-          permissions: [], // Empty permissions array
-        };
-        console.log(
-          `🆕 Added new role: ${role.displayName} under module: ${module.name}`
-        );
-      }
-
-      // Add permission entry to the role
-      organized[moduleId].roles[roleId].permissions.push({
-        menuName: menu.name,
-        menuType: menu.type,
-        menuId,
-        actions: perm.actions,
-      });
-      console.log(
-        `✔️ Added permission for role: ${role.displayName} to menu: ${menu.name}`
-      );
-    });
-
-    // Add new menus (those that don't have permissions yet) with default false actions
-    allMenus.forEach((menu) => {
-      const moduleId = menu.moduleId.toString();
-
-      // If the menu doesn't exist in organized module or role, we need to add it with default actions
-      if (!organized[moduleId]) {
-        organized[moduleId] = {
-          moduleName: menu.moduleId.name,
-          modulePath: menu.moduleId.path,
-          orderBy: menu.moduleId.orderBy || 99,
+          menus: [],
           roles: {},
         };
       }
 
-      // Iterate through roles to add the new menu with default actions
+      if (!organized[moduleId].roles[roleId]) {
+        organized[moduleId].roles[roleId] = {
+          roleId,
+          roleName: role.displayName,
+          permissions: [],
+        };
+      }
+
+      organized[moduleId].roles[roleId].permissions.push({
+        menuId,
+        menuName: menu.name,
+        menuType: menu.type,
+        actions: perm.actions,
+      });
+    });
+
+    // Step 2: Ensure menus[] is filled for each module, including new menus
+    allMenus.forEach((menu) => {
+      const module = menu.moduleId;
+      if (!module) return;
+
+      const moduleId = module._id.toString();
+
+      // Init module if not already done
+      if (!organized[moduleId]) {
+        organized[moduleId] = {
+          moduleName: module.name,
+          modulePath: module.path,
+          orderBy: module.orderBy || 99,
+          menus: [],
+          roles: {},
+        };
+      }
+
+      const menuData = {
+        _id: menu._id.toString(),
+        name: menu.name,
+        type: menu.type,
+      };
+
+      // Avoid duplicate menu push
+      const exists = organized[moduleId].menus.find(
+        (m) => m._id === menuData._id
+      );
+      if (!exists) {
+        organized[moduleId].menus.push(menuData);
+      }
+
+      // Add this menu with empty actions to all existing roles if missing
       Object.values(organized[moduleId].roles).forEach((role) => {
-        if (!role.permissions.find((p) => p.menuId === menu._id.toString())) {
+        const alreadyHas = role.permissions.find(
+          (p) => p.menuId === menu._id.toString()
+        );
+        if (!alreadyHas) {
           role.permissions.push({
+            menuId: menu._id.toString(),
             menuName: menu.name,
             menuType: menu.type,
-            menuId: menu._id.toString(),
-            actions: [], // Default empty actions (false)
+            actions: [],
           });
-          console.log(
-            `🆕 Added new menu: ${menu.name} with default actions to role: ${role.roleName}`
-          );
         }
       });
     });
 
-    // Convert organized object to an array and sort by order
+    // Step 3: Convert organized map to array and sort
     const result = Object.values(organized)
       .sort((a, b) => a.orderBy - b.orderBy)
       .map((mod) => ({
         ...mod,
-        roles: Object.values(mod.roles), // Convert roles to an array
+        roles: Object.values(mod.roles),
       }));
 
-    console.log("📦 Organized permissions:", result);
-
-    res.json(result); // Send the organized data back to the frontend
+    console.log("📦 Final structured permissions ready for frontend");
+    res.json(result);
   } catch (err) {
     console.error("❌ Error while fetching all permissions:", err);
     res.status(500).json({ error: "Internal Server Error" });

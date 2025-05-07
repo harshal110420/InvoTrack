@@ -21,9 +21,11 @@ const PermissionForm = ({ selectedRole, onClose }) => {
   console.log("Menus permission check from API:", permissions);
 
   const [expandedModules, setExpandedModules] = useState({});
+  const [expandedTypes, setExpandedTypes] = useState({});
   const [localPermissions, setLocalPermissions] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (selectedRole) {
@@ -40,21 +42,25 @@ const PermissionForm = ({ selectedRole, onClose }) => {
         const moduleName = module.moduleName;
         transformed[moduleName] = {};
 
-        // Get the permissions from the first role (you mentioned roles[0] always present)
-        const modulePermissions = module.roles?.[0]?.permissions || [];
+        const rolePermissions =
+          module.roles?.find((r) => r.roleName === selectedRole.roleName)
+            ?.permissions || [];
 
-        modulePermissions.forEach((perm) => {
+        // Convert assigned permissions to a map for faster lookup
+        const assignedMap = {};
+        rolePermissions.forEach((perm) => {
           const menuId =
             typeof perm.menuId === "object" ? perm.menuId._id : perm.menuId;
+          assignedMap[menuId] = perm.actions || [];
+        });
 
-          const name = perm.menuName || perm.menuId?.name || "Unnamed Menu";
-
-          const type = perm.menuType || "Other";
-
+        // Now iterate through all menus in the module
+        module.menus?.forEach((menu) => {
+          const menuId = typeof menu._id === "object" ? menu._id._id : menu._id;
           transformed[moduleName][menuId] = {
-            name,
-            type,
-            actions: perm.actions || [], // even if empty, show it
+            name: menu.name || "Unnamed Menu",
+            type: menu.type || "Other",
+            actions: assignedMap[menuId] || [], // if not assigned, keep it empty
           };
         });
       });
@@ -64,9 +70,13 @@ const PermissionForm = ({ selectedRole, onClose }) => {
   }, [permissions]);
 
   useEffect(() => {
-    const hasChanges =
-      JSON.stringify(localPermissions) !== JSON.stringify(permissions);
-    setHasChanges(hasChanges);
+    const checkChanges = () => {
+      const original = JSON.stringify(permissions);
+      const current = JSON.stringify(localPermissions);
+      setHasChanges(original !== current);
+    };
+
+    checkChanges();
   }, [localPermissions, permissions]);
 
   const toggleModule = (moduleName) => {
@@ -74,6 +84,16 @@ const PermissionForm = ({ selectedRole, onClose }) => {
     setExpandedModules((prev) => ({
       ...prev,
       [moduleName]: !prev[moduleName],
+    }));
+  };
+
+  const toggleType = (moduleName, type) => {
+    setExpandedTypes((prev) => ({
+      ...prev,
+      [moduleName]: {
+        ...prev[moduleName],
+        [type]: !prev?.[moduleName]?.[type],
+      },
     }));
   };
 
@@ -108,6 +128,7 @@ const PermissionForm = ({ selectedRole, onClose }) => {
 
   const handleSubmit = async () => {
     console.log("Submitting permissions...");
+    setIsSubmitting(true);
     const requests = [];
 
     Object.entries(localPermissions).forEach(([moduleName, menus]) => {
@@ -149,6 +170,8 @@ const PermissionForm = ({ selectedRole, onClose }) => {
     } catch (err) {
       console.error("Permission update error:", err);
       toast.error("Failed to update permissions!");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -156,6 +179,12 @@ const PermissionForm = ({ selectedRole, onClose }) => {
     Object.entries(menus).filter(([_, menu]) =>
       menu.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+  useEffect(() => {
+    const hasDiff =
+      JSON.stringify(permissions) !== JSON.stringify(localPermissions);
+    setHasChanges(hasDiff);
+  }, [permissions, localPermissions]);
 
   if (loading || !selectedRole) {
     return (
@@ -222,52 +251,87 @@ const PermissionForm = ({ selectedRole, onClose }) => {
 
           {expandedModules[moduleName] && (
             <div className="overflow-x-auto bg-white">
-              <table className="w-full text-sm border-collapse">
-                <thead className="bg-gray-50 text-gray-700">
-                  <tr>
-                    <th className="text-left py-3 px-4 border-b font-medium">
-                      Menu
-                    </th>
-                    <th className="text-left py-3 px-4 border-b font-medium">
-                      Type
-                    </th>
-                    {actionList.map((action) => (
-                      <th
-                        key={action}
-                        className="text-center py-3 px-2 border-b font-medium capitalize"
-                      >
-                        {action}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filterMenus(menus).map(
-                    ([menuId, { name, type, actions }]) => (
-                      <tr key={menuId} className="hover:bg-gray-50">
-                        <td className="py-2 px-4 border-b text-gray-800">
-                          {name}
-                        </td>
-                        <td className="py-2 px-4 border-b text-gray-600 capitalize">
-                          {type}
-                        </td>
-                        {actionList.map((action) => (
-                          <td key={action} className="text-center border-b">
-                            <input
-                              type="checkbox"
-                              checked={actions?.includes(action)}
-                              onChange={() =>
-                                handleCheckboxChange(moduleName, menuId, action)
-                              }
-                              className="w-4 h-4 accent-blue-600"
-                            />
-                          </td>
-                        ))}
-                      </tr>
-                    )
-                  )}
-                </tbody>
-              </table>
+              {["Master", "Transaction", "Report"].map((typeKey) => {
+                const menusOfType = filterMenus(menus).filter(
+                  ([_, menu]) =>
+                    menu.type?.toLowerCase() === typeKey.toLowerCase()
+                );
+                if (menusOfType.length === 0) return null;
+
+                return (
+                  <div key={typeKey} className="border-t">
+                    {/* Type Header */}
+                    <div
+                      onClick={() => toggleType(moduleName, typeKey)}
+                      className="flex justify-between items-center bg-gray-50 px-4 py-2 cursor-pointer hover:bg-gray-100"
+                    >
+                      <h3 className="font-semibold text-gray-700">{typeKey}</h3>
+                      {expandedTypes?.[moduleName]?.[typeKey] ? (
+                        <ChevronDown className="w-4 h-4 text-gray-500" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4 text-gray-500" />
+                      )}
+                    </div>
+
+                    {/* Table Content */}
+                    {expandedTypes?.[moduleName]?.[typeKey] && (
+                      <table className="w-full text-sm border-collapse">
+                        <thead className="bg-gray-100 text-gray-700">
+                          <tr>
+                            <th className="text-left py-2 px-4 border-b">
+                              Menu
+                            </th>
+                            <th className="text-left py-2 px-4 border-b">
+                              Type
+                            </th>
+                            {actionList.map((action) => (
+                              <th
+                                key={action}
+                                className="text-center py-2 px-2 border-b capitalize"
+                              >
+                                {action}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {menusOfType.map(
+                            ([menuId, { name, type, actions }]) => (
+                              <tr key={menuId} className="hover:bg-gray-50">
+                                <td className="py-2 px-4 border-b text-gray-800">
+                                  {name}
+                                </td>
+                                <td className="py-2 px-4 border-b text-gray-600 capitalize">
+                                  {type}
+                                </td>
+                                {actionList.map((action) => (
+                                  <td
+                                    key={action}
+                                    className="text-center border-b"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={actions?.includes(action)}
+                                      onChange={() =>
+                                        handleCheckboxChange(
+                                          moduleName,
+                                          menuId,
+                                          action
+                                        )
+                                      }
+                                      className="w-4 h-4 accent-blue-600"
+                                    />
+                                  </td>
+                                ))}
+                              </tr>
+                            )
+                          )}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -290,7 +354,7 @@ const PermissionForm = ({ selectedRole, onClose }) => {
               : "bg-gray-400 cursor-not-allowed"
           }`}
         >
-          Save Permissions
+          Save changes
         </button>
       </div>
     </div>

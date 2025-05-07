@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllPermissions } from "../../../features/permissions/permissionSlice";
+import { fetchRoles } from "../../../features/Roles/rolesSlice"; // ✅ Import this
 import PermissionsForm from "./PermissionForm";
 
 const PermissionsPage = () => {
   const dispatch = useDispatch();
   const { allPermissions, loading } = useSelector((state) => state.permission);
+  const { roles } = useSelector((state) => state.roles); // ✅ Roles from Redux
   const [selectedRole, setSelectedRole] = useState(null);
 
   useEffect(() => {
     dispatch(fetchAllPermissions());
+    dispatch(fetchRoles()); // ✅ Fetch all roles on load
   }, [dispatch]);
 
   const handleEditClick = (role) => {
@@ -20,23 +23,10 @@ const PermissionsPage = () => {
     setSelectedRole(null);
   };
 
-  const uniqueRoles = Array.isArray(allPermissions)
-    ? allPermissions.flatMap((module) =>
-        module.roles.map((role) => ({
-          roleId: role.roleId,
-          roleName: role.roleName,
-        }))
-      )
-    : [];
-
-  const uniqueRolesById = Array.from(
-    new Map(
-      uniqueRoles.map((role) => [
-        role.roleId,
-        { roleId: role.roleId, roleName: role.roleName },
-      ])
-    ).values()
-  );
+  const uniqueRolesById = roles.map((role) => ({
+    roleId: role._id,
+    roleName: role.displayName || role.roleName, // prefer displayName for UI
+  }));
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -84,7 +74,7 @@ const PermissionsPage = () => {
                       colSpan="2"
                       className="p-4 border border-gray-200 text-center text-gray-500"
                     >
-                      No roles available for permissions.
+                      No roles available.
                     </td>
                   </tr>
                 )}
