@@ -1,157 +1,198 @@
-const EnterpriseModel = require("../Model/SystemConfigureModel/EnterPriseModel");
 const asyncHandler = require("express-async-handler");
+const EnterpriseModel = require("../Model/SystemConfigureModel/EnterPriseModel");
 
-// @desc Create new enterprise
-// @route POST /api/enterprise
-// @access Private (Only super_admin can create an enterprise)
+// @desc    Create new enterprise
+// @route   POST /api/enterprise
+// @access  Private (authmiddleware)
 const createEnterprise = asyncHandler(async (req, res) => {
-  try {
-    const {
-      enterpriseCode,
-      name,
-      ownerName,
-      email,
-      phoneNumber,
-      gstNumber,
-      panNumber,
-      address,
-      isActive,
-    } = req.body;
+  const {
+    enterpriseCode,
+    name,
+    ownerName,
+    email,
+    phoneNumber,
+    gstNumber,
+    panNumber,
+    address,
+    isActive,
+    enterpriseType,
+    parentEnterprise,
+  } = req.body;
 
-    // Ensure required fields are provided
-    if (!gstNumber) {
-      return res.status(400).json({ message: "GST number is required." });
-    }
+  // Check for duplicate code
+  const existing = await EnterpriseModel.findOne({ enterpriseCode });
+  if (existing) {
+    return res.status(400).json({ message: "Enterprise code already exists" });
+  }
 
-    // Check if an enterprise with the given GST number already exists
-    const enterpriseExists = await EnterpriseModel.findOne({ gstNumber });
-    if (enterpriseExists) {
-      return res.status(400).json({
-        message: "Enterprise with this GST number already exists.",
-      });
-    }
-
-    // Create new enterprise
-    const enterprise = await EnterpriseModel.create({
-      enterpriseCode,
-      name,
-      ownerName,
-      email,
-      phoneNumber,
-      gstNumber,
-      panNumber,
-      address,
-      isActive: isActive !== undefined ? isActive : true,
+  // Validate parentEnterprise if not HEAD
+  if (enterpriseType !== "HEAD" && !parentEnterprise) {
+    return res.status(400).json({
+      message: "Parent enterprise is required for REGIONAL or BRANCH type.",
     });
-
-    res
-      .status(201)
-      .json({ message: "Enterprise created successfully", enterprise });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
   }
+
+  const enterprise = await EnterpriseModel.create({
+    enterpriseCode,
+    name,
+    ownerName,
+    email,
+    phoneNumber,
+    gstNumber,
+    panNumber,
+    address,
+    isActive: isActive !== undefined ? isActive : true,
+    enterpriseType,
+    parentEnterprise,
+  });
+
+  res
+    .status(201)
+    .json({ message: "Enterprise created successfully", enterprise });
 });
 
-// @desc Get all enterprises
-// @route GET /api/enterprise
-// @access Private (Only super_admin access)
+// @desc    Get all enterprises (with parent info populated)
+// @route   GET /api/enterprise
+// @access  Private
 const getAllEnterprises = asyncHandler(async (req, res) => {
-  try {
-    const enterprises = await EnterpriseModel.find();
-    res
-      .status(200)
-      .json({ message: "Enterprises fetched successfully", enterprises });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
+  const enterprises = await EnterpriseModel.find().populate(
+    "parentEnterprise",
+    "name enterpriseCode enterpriseType"
+  );
+  res.status(200).json({ enterprises });
 });
 
-// @desc Get single enterprise by ID
-// @route GET /api/enterprise/:id
-// @access Private (Only super_admin access)
-const getSingleEnterprise = asyncHandler(async (req, res) => {
-  try {
-    const enterprise = await EnterpriseModel.findById(req.params.id);
-    if (!enterprise) {
-      return res.status(404).json({ message: "Enterprise not found." });
-    }
-    res.status(200).json({ message: "Enterprise found", enterprise });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+// @desc    Get single enterprise by ID
+// @route   GET /api/enterprise/:id
+// @access  Private
+const getEnterpriseById = asyncHandler(async (req, res) => {
+  const enterprise = await EnterpriseModel.findById(req.params.id).populate(
+    "parentEnterprise",
+    "name enterpriseCode enterpriseType"
+  );
+
+  if (!enterprise) {
+    return res.status(404).json({ message: "Enterprise not found" });
   }
+
+  res.status(200).json({ enterprise });
 });
 
-// @desc Update enterprise
-// @route PUT /api/enterprise/:id
-// @access Private (Only super_admin access)
+// @desc    Update enterprise
+// @route   PUT /api/enterprise/:id
+// @access  Private
 const updateEnterprise = asyncHandler(async (req, res) => {
-  try {
-    const enterprise = await EnterpriseModel.findById(req.params.id);
+  const enterprise = await EnterpriseModel.findById(req.params.id);
 
-    if (!enterprise) {
-      return res.status(404).json({ message: "Enterprise not found" });
-    }
-
-    // Update fields only if they exist in the request body
-    if (req.body.enterpriseCode !== undefined) {
-      enterprise.enterpriseCode = req.body.enterpriseCode;
-    }
-    if (req.body.name !== undefined) {
-      enterprise.name = req.body.name;
-    }
-    if (req.body.ownerName !== undefined) {
-      enterprise.ownerName = req.body.ownerName;
-    }
-    if (req.body.email !== undefined) {
-      enterprise.email = req.body.email;
-    }
-    if (req.body.phoneNumber !== undefined) {
-      enterprise.phoneNumber = req.body.phoneNumber;
-    }
-    if (req.body.gstNumber !== undefined) {
-      enterprise.gstNumber = req.body.gstNumber;
-    }
-    if (req.body.panNumber !== undefined) {
-      enterprise.panNumber = req.body.panNumber;
-    }
-    if (req.body.address !== undefined) {
-      enterprise.address = req.body.address;
-    }
-    if (req.body.isActive !== undefined) {
-      enterprise.isActive = req.body.isActive;
-    }
-
-    // Save updated enterprise
-    await enterprise.save();
-    res
-      .status(200)
-      .json({ message: "Enterprise updated successfully", enterprise });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+  if (!enterprise) {
+    return res.status(404).json({ message: "Enterprise not found" });
   }
+
+  const {
+    name,
+    ownerName,
+    email,
+    phoneNumber,
+    gstNumber,
+    panNumber,
+    address,
+    isActive,
+    enterpriseType,
+    parentEnterprise,
+  } = req.body;
+
+  // Update fields
+  enterprise.name = name || enterprise.name;
+  enterprise.ownerName = ownerName || enterprise.ownerName;
+  enterprise.email = email || enterprise.email;
+  enterprise.phoneNumber = phoneNumber || enterprise.phoneNumber;
+  enterprise.gstNumber = gstNumber || enterprise.gstNumber;
+  enterprise.panNumber = panNumber || enterprise.panNumber;
+  enterprise.address = address || enterprise.address;
+  enterprise.isActive = isActive !== undefined ? isActive : enterprise.isActive;
+
+  if (enterpriseType) enterprise.enterpriseType = enterpriseType;
+  if (parentEnterprise !== undefined)
+    enterprise.parentEnterprise = parentEnterprise;
+
+  const updated = await enterprise.save();
+
+  res
+    .status(200)
+    .json({ message: "Enterprise updated successfully", enterprise: updated });
 });
 
-// @desc Delete an enterprise
-// @route DELETE /api/enterprise/:id
-// @access Private (Only super_admin access)
+// @desc    Delete enterprise
+// @route   DELETE /api/enterprise/:id
+// @access  Private
 const deleteEnterprise = asyncHandler(async (req, res) => {
+  const enterprise = await EnterpriseModel.findById(req.params.id);
+
+  if (!enterprise) {
+    return res.status(404).json({ message: "Enterprise not found" });
+  }
+
+  await enterprise.deleteOne();
+  res.status(200).json({ message: "Enterprise deleted successfully" });
+});
+
+// @desc    Get enterprises by parent enterprise
+// @route   GET /api/enterprise/by-parent/:parentId
+// @access  Private
+const getEnterprisesByParent = asyncHandler(async (req, res) => {
+  const enterprises = await EnterpriseModel.find({
+    parentEnterprise: req.params.parentId,
+  });
+  res.status(200).json({ enterprises });
+});
+
+// Recursive function
+const fetchChildren = async (parentId) => {
+  const children = await EnterpriseModel.find({ parentEnterprise: parentId });
+
+  const result = await Promise.all(
+    children.map(async (child) => {
+      const subChildren = await fetchChildren(child._id); // recursion
+      return {
+        ...child.toObject(),
+        children: subChildren,
+      };
+    })
+  );
+
+  return result;
+};
+
+// Main controller
+const getEnterpriseTreeById = async (req, res) => {
   try {
-    const enterprise = await EnterpriseModel.findById(req.params.id);
-    if (!enterprise) {
+    const { enterpriseId } = req.params;
+    const parent = await EnterpriseModel.findById(enterpriseId);
+
+    if (!parent) {
       return res.status(404).json({ message: "Enterprise not found" });
     }
 
-    await enterprise.deleteOne();
-    res.status(200).json({ message: "Enterprise deleted successfully" });
+    const children = await fetchChildren(parent._id);
+
+    const tree = {
+      ...parent.toObject(),
+      children,
+    };
+
+    res.status(200).json(tree);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Error fetching enterprise tree:", error);
+    res.status(500).json({ message: "Server Error" });
   }
-});
+};
 
 module.exports = {
   createEnterprise,
   getAllEnterprises,
-  getSingleEnterprise,
+  getEnterpriseById,
   updateEnterprise,
   deleteEnterprise,
+  getEnterprisesByParent,
+  getEnterpriseTreeById,
 };
