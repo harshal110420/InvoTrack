@@ -2,6 +2,7 @@ const UserModel = require("../Model/SystemConfigureModel/UserModel");
 const RoleModel = require("../Model/SystemConfigureModel/RoleModel"); // Ensure Role exists
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcryptjs");
+const mapEnterprisesByHierarchy = require("../Utility/mapEnterprisesByHierarchy");
 
 // @desc    Create new user
 // @route   POST /api/users
@@ -13,48 +14,46 @@ const createUser = asyncHandler(async (req, res) => {
     username,
     password,
     role,
-    enterprise,
     businessName,
     phoneNumber,
     address,
     taxIdentificationNumber,
     isActive,
+    createInEnterprise,
   } = req.body;
 
-  // 🛑 Ensure only Super Admin can create users
   if (!req.user.role || req.user.role.toString() !== "super_admin") {
     return res
       .status(403)
-      .json({ message: "Access Denied! Only super_admin can create users." });
+      .json({ message: "Only super_admin can create users." });
   }
 
-  // ✅ Validate Role ID
   const existingRole = await RoleModel.findById(role);
   if (!existingRole) {
     return res.status(400).json({ message: "Invalid role ID" });
   }
 
-  // ✅ Check if user already exists
   const userExists = await UserModel.findOne({ username });
   if (userExists) {
-    return res
-      .status(400)
-      .json({ message: "User with this username already exists." });
+    return res.status(400).json({ message: "Username already exists." });
   }
 
-  // 🔐 Hash Password (Handled in Schema, so no need here)
+  const { currentEnterpriseId, mappedEnterprises } =
+    await mapEnterprisesByHierarchy(createInEnterprise);
+
   const user = await UserModel.create({
     fullName,
     email,
     username,
-    password, // Password will be hashed in the model
+    password,
     role,
-    enterprise,
     businessName,
     phoneNumber,
     address,
     taxIdentificationNumber,
-    isActive: isActive !== undefined ? isActive : true, // Default true
+    isActive: isActive !== undefined ? isActive : true,
+    createInEnterprise: currentEnterpriseId,
+    enterprises: mappedEnterprises,
   });
 
   if (user) {
@@ -97,7 +96,6 @@ const updateUser = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "User not found" });
   }
 
-  // ✅ Validate Role ID if updating
   if (req.body.role) {
     const existingRole = await RoleModel.findById(req.body.role);
     if (!existingRole) {
@@ -109,7 +107,6 @@ const updateUser = asyncHandler(async (req, res) => {
   user.email = req.body.email || user.email;
   user.username = req.body.username || user.username;
   user.role = req.body.role || user.role;
-  user.enterprise = req.body.enterprise || user.enterprise;
   user.businessName = req.body.businessName || user.businessName;
   user.phoneNumber = req.body.phoneNumber || user.phoneNumber;
   user.address = req.body.address || user.address;
@@ -120,6 +117,13 @@ const updateUser = asyncHandler(async (req, res) => {
 
   if (req.body.password) {
     user.password = await bcrypt.hash(req.body.password, 10);
+  }
+
+  if (req.body.createInEnterprise) {
+    const { currentEnterpriseId, mappedEnterprises } =
+      await mapEnterprisesByHierarchy(req.body.createInEnterprise);
+    user.createInEnterprise = currentEnterpriseId;
+    user.enterprises = mappedEnterprises;
   }
 
   await user.save();
