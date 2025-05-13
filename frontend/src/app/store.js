@@ -8,13 +8,14 @@ import rolesReducer from "../features/Roles/rolesSlice";
 import roleFormReducer from "../features/Roles/roleFormSlice";
 import menuReducer from "../features/menus/menuSlice";
 import modulesReducer from "../features/Modules/ModuleSlice";
-
+import enterpriseReducer from "../features/Enterprises/EnterpriseSlice";
 const rootReducer = combineReducers({
   permission: permissionReducer,
   roles: rolesReducer,
   roleForm: roleFormReducer,
   menus: menuReducer,
   modules: modulesReducer,
+  enterprise: enterpriseReducer, 
 });
 
 const persistConfig = {
