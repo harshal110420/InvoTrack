@@ -59,7 +59,7 @@ const FlatListView = ({ data }) => {
                     {ent.isActive ? "Active" : "Inactive"}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
+                <td className="px-6 py-4 whitespace-nowrap text-center flex justify-center gap-3">
                   <ButtonWrapper
                     subModule="Enterprise management"
                     permission="edit"
@@ -67,13 +67,30 @@ const FlatListView = ({ data }) => {
                     <button
                       onClick={() =>
                         navigate(
-                          `/module/admin-module/enterprise/update/${ent._id}`
+                          `/module/admin-module/enterprise_management/update/${ent._id}`
                         )
                       }
                       className="text-blue-600 hover:text-blue-800"
                       title="Edit Enterprise"
                     >
                       ✏️
+                    </button>
+                  </ButtonWrapper>
+
+                  <ButtonWrapper
+                    subModule="Enterprise management"
+                    permission="view"
+                  >
+                    <button
+                      onClick={() =>
+                        navigate(
+                          `/module/admin-module/enterprise_management/get/${ent._id}`
+                        )
+                      }
+                      className="text-green-600 hover:text-green-800"
+                      title="View Details"
+                    >
+                      👁️
                     </button>
                   </ButtonWrapper>
                 </td>

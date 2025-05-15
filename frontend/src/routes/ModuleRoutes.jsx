@@ -5,6 +5,7 @@ import MenuPage from "../pages/System/Menus/MenuPage";
 import MenuForm from "../pages/System/Menus/MenusForm";
 import PermissionsPage from "../pages/System/Permission/PermissionPage";
 import EnterprisePage from "../pages/Administration/Enterprise/EnterprisePage";
+import EnterpriseDetailPage from "../pages/Administration/Enterprise/EnterpriseDetailPage";
 
 // Import more pages as needed
 
@@ -20,9 +21,11 @@ const ModuleRoutes = () => {
       <Route path="/menu_management/update/:id" element={<MenuForm />} />
 
       <Route path="permission_management" element={<PermissionsPage />} />
+      
+      <Route path="enterprise_management" element={<EnterprisePage />} />
       {/* <Route path="/permission_management/create" element={<MenuForm />} />
       <Route path="/permission_management/update/:id" element={<MenuForm />} /> */}
-      <Route path="enterprise_management" element={<EnterprisePage />} />
+      <Route path="enterprise_management/get/:id" element={<EnterpriseDetailPage />} />
       {/* Add more module-specific routes here */}
     </Routes>
   );

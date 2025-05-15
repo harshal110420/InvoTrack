@@ -5,8 +5,8 @@ import {
   getEnterpriseTree,
 } from "../../../features/Enterprises/EnterpriseSlice";
 import FlatListView from "./FlatListView";
-import GroupedListView from "./GroupedListView";
-import HierarchyView from "./HierarchyView";
+// import GroupedListView from "./GroupedListView";
+// import HierarchyView from "./HierarchyView";
 import TreeView from "./TreeView";
 import ButtonWrapper from "../../../components/ButtonWrapper";
 import { useNavigate } from "react-router-dom";
@@ -38,10 +38,10 @@ const EnterprisePage = () => {
     switch (viewMode) {
       case "flat":
         return <FlatListView data={enterpriseList} />;
-      case "grouped":
-        return <GroupedListView data={enterpriseList} />;
-      case "hierarchy":
-        return <HierarchyView data={enterpriseList} />;
+      // case "grouped":
+      //   return <GroupedListView data={enterpriseList} />;
+      // case "hierarchy":
+      //   return <HierarchyView data={enterpriseList} />;
       case "tree":
         return <TreeView data={enterpriseTree} />;
       default:
@@ -50,8 +50,8 @@ const EnterprisePage = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 font-sans h-full flex flex-col">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 shrink-0">
         <h2 className="text-2xl font-semibold text-gray-800 flex items-center gap-2">
           🏢 Enterprise Management
         </h2>
@@ -68,27 +68,24 @@ const EnterprisePage = () => {
               className="px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="flat">Flat List</option>
-              <option value="grouped">Grouped by Type</option>
-              <option value="hierarchy">Hierarchy View</option>
+              {/* <option value="grouped">Grouped by Type</option>
+              <option value="hierarchy">Hierarchy View</option> */}
               <option value="tree">Tree View</option>
             </select>
           </div>
 
-          <ButtonWrapper
-            subModule="Enterprise management"
-            permission="new"
-          >
+          <ButtonWrapper subModule="Enterprise management" permission="new">
             <button
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition"
-              onClick={() => navigate("/module/admin-module/enterprise/create")}
+              onClick={() => navigate("/module/admin-module/enterprise_management/create")}
             >
-              ➕ Add Enterprise
+              Add Enterprise
             </button>
           </ButtonWrapper>
         </div>
       </div>
 
-      <div className="bg-white shadow-md rounded-lg p-6 min-h-[300px]">
+      <div className="bg-white shadow-md rounded-lg p-6 flex-grow overflow-y-auto">
         {loading ? (
           <p className="text-gray-500 text-center text-lg py-10">Loading...</p>
         ) : error ? (
