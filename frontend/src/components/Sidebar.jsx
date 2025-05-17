@@ -30,12 +30,12 @@ const Sidebar = ({ moduleName, collapsed }) => {
   return (
     <aside
       className={`${
-        collapsed ? "w-16" : "w-64"
-      } h-full bg-[#1F2937] text-white p-4 shadow-md overflow-y-auto transition-all duration-300`}
+        collapsed ? "w-16" : "w-52"
+      } h-full bg-[#1F2937] text-white p-3 shadow-md overflow-y-auto transition-all duration-300 flex-shrink-0`}
     >
       {!collapsed && (
-        <div className="mb-6">
-          <h2 className="text-2xl font-semibold tracking-wide border-b border-gray-700 pb-2">
+        <div className="mb-5">
+          <h2 className="text-lg font-semibold tracking-wide border-b border-gray-700 pb-2">
             {currentModule.moduleName}
           </h2>
         </div>
@@ -52,7 +52,7 @@ const Sidebar = ({ moduleName, collapsed }) => {
                 <>
                   <button
                     onClick={() => toggleCategory(category)}
-                    className="w-full flex justify-between items-center px-4 py-2 rounded-md font-medium uppercase tracking-wider text-sm bg-gray-800 hover:bg-gray-700 transition-colors"
+                    className="w-full flex justify-between items-center px-4 py-2 rounded-md uppercase tracking-wider text-sm bg-gray-800 hover:bg-gray-700 transition-colors"
                   >
                     <span>{category}</span>
                     <span className="text-xs">
@@ -66,7 +66,7 @@ const Sidebar = ({ moduleName, collapsed }) => {
                         <li key={subModule.menuId}>
                           <Link
                             to={`/module/${moduleName}/${subModule.menuId}`}
-                            className={`block px-3 py-2 rounded-md text-sm hover:bg-gray-700 transition-all ${
+                            className={`block px-2 py-2 rounded-md text-xs  hover:bg-gray-700 transition-all ${
                               location.pathname.includes(subModule.menuId)
                                 ? "bg-gray-700 font-semibold"
                                 : "text-gray-300"

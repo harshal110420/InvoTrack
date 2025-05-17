@@ -50,22 +50,25 @@ const EnterprisePage = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 font-sans h-full flex flex-col">
+    <div className="max-w-7xl px-2 sm:px-3 lg:px-3 py-2 font-sans h-full flex flex-col">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 shrink-0">
         <h2 className="text-2xl font-semibold text-gray-800 flex items-center gap-2">
-          🏢 Enterprise Management
+          Enterprise Management
         </h2>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="flex items-center gap-2">
-            <label htmlFor="viewMode" className="text-gray-600 font-medium">
+            <label
+              htmlFor="viewMode"
+              className="text-gray-600 font-medium text-sm"
+            >
               View Mode:
             </label>
             <select
               id="viewMode"
               onChange={(e) => setViewMode(e.target.value)}
               value={viewMode}
-              className="px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-2 py-1.5 border text-sm border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="flat">Flat List</option>
               {/* <option value="grouped">Grouped by Type</option>
@@ -74,18 +77,20 @@ const EnterprisePage = () => {
             </select>
           </div>
 
-          <ButtonWrapper subModule="Enterprise management" permission="new">
+          <ButtonWrapper subModule="Enterprise Management" permission="new">
             <button
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition"
-              onClick={() => navigate("/module/admin-module/enterprise_management/create")}
+              className="bg-blue-600 text-sm hover:bg-blue-700 text-white px-2 py-1.5 rounded-md transition"
+              onClick={() =>
+                navigate("/module/admin-module/enterprise_management/create")
+              }
             >
-              Add Enterprise
+              Create Enterprise
             </button>
           </ButtonWrapper>
         </div>
       </div>
 
-      <div className="bg-white shadow-md rounded-lg p-6 flex-grow overflow-y-auto">
+      <div className="bg-white shadow-md rounded-lg flex-grow overflow-y-auto overflow-x-hidden">
         {loading ? (
           <p className="text-gray-500 text-center text-lg py-10">Loading...</p>
         ) : error ? (

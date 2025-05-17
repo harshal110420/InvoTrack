@@ -17,8 +17,8 @@ const ModuleRoutes = () => {
       <Route path="role_management/update/:roleId" element={<RoleForm />} />
 
       <Route path="menu_management" element={<MenuPage />} />
-      <Route path="/menu_management/create" element={<MenuForm />} />
-      <Route path="/menu_management/update/:id" element={<MenuForm />} />
+      <Route path="menu_management/create" element={<MenuForm />} />
+      <Route path="menu_management/update/:id" element={<MenuForm />} />
 
       <Route path="permission_management" element={<PermissionsPage />} />
       

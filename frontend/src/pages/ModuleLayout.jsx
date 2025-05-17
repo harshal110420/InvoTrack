@@ -11,7 +11,7 @@ import { useSelector } from "react-redux";
 import Sidebar from "../components/Sidebar";
 import ModuleRoutes from "../routes/ModuleRoutes";
 import useUnsavedChangesWarning from "../hooks/useUnsavedChangesWarning";
-import { Home } from "lucide-react"; // At top
+import { Home, Menu } from "lucide-react"; // At top
 
 const ModuleLayout = () => {
   const { user } = useAuth();
@@ -75,10 +75,9 @@ const ModuleLayout = () => {
           <button
             onClick={toggleSidebar}
             title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-            className="text-gray-600 hover:text-gray-800 transition text-xl"
+            className="text-gray-600 hover:text-gray-800 transition p-1"
           >
-            {isSidebarCollapsed ? "☰" : "☰"}{" "}
-            {/* Can replace with lucide icons */}
+            <Menu className="w-6 h-6" />
           </button>
           <button
             onClick={handleHomeClick}
