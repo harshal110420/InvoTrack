@@ -2,6 +2,14 @@ import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getEnterpriseById } from "../../../features/Enterprises/EnterpriseSlice";
+import {
+  Building2,
+  Mail,
+  Phone,
+  User2,
+  BadgePercent,
+  Banknote,
+} from "lucide-react";
 
 const EnterpriseDetailPage = () => {
   const { id } = useParams();
@@ -50,18 +58,24 @@ const EnterpriseDetailPage = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto py-10 px-8 bg-white border border-gray-200 shadow-md rounded-2xl">
-      <div className="flex justify-between items-center border-b pb-4 mb-6">
-        <div>
-          <h2 className="text-3xl font-semibold text-gray-900 flex items-center gap-2">
-            🏢 {name}
-            <span className="text-sm bg-gray-100 text-gray-600 font-medium px-2 py-0.5 rounded">
-              {enterpriseCode}
-            </span>
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            {enterpriseType} Enterprise
-          </p>
+    <div className="max-w-full py-2 px-2 md:px-2">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-blue-100 text-blue-600 rounded-full">
+            <Building2 className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
+              {name}
+              <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded">
+                {enterpriseCode}
+              </span>
+            </h1>
+            <p className="text-sm text-gray-500 capitalize">
+              {enterpriseType.toLowerCase()} Enterprise
+            </p>
+          </div>
         </div>
         <button
           onClick={() => navigate(-1)}
@@ -71,47 +85,44 @@ const EnterpriseDetailPage = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm text-gray-700">
-        <Detail label="Owner" value={ownerName} />
-        <Detail label="GST Number" value={gstNumber} />
-        <Detail label="PAN Number" value={panNumber} />
-        <Detail label="Email" value={email} />
-        <Detail label="Phone Number" value={phoneNumber} />
-        <Detail
-          label="Status"
-          value={
-            <span
-              className={`px-2 py-0.5 text-xs font-medium rounded ${
-                isActive
-                  ? "bg-green-100 text-green-700"
-                  : "bg-red-100 text-red-600"
-              }`}
-            >
-              {isActive ? "Active" : "Inactive"}
-            </span>
-          }
-        />
-        <Detail
-          label="Created At"
-          value={new Date(createdAt).toLocaleString()}
-        />
-        <Detail
-          label="Updated At"
-          value={new Date(updatedAt).toLocaleString()}
-        />
+      {/* Info Grid */}
+      <div className="bg-white shadow-md border border-gray-200 rounded-2xl p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <Info icon={<User2 />} label="Owner" value={ownerName} />
+        <Info icon={<BadgePercent />} label="GST Number" value={gstNumber} />
+        <Info icon={<Banknote />} label="PAN Number" value={panNumber} />
+        <Info icon={<Mail />} label="Email" value={email} />
+        <Info icon={<Phone />} label="Phone" value={phoneNumber} />
+        <StatusInfo label="Status" isActive={isActive} />
+        <Info label="Created At" value={new Date(createdAt).toLocaleString()} />
+        <Info label="Updated At" value={new Date(updatedAt).toLocaleString()} />
         <div className="sm:col-span-2">
-          <Detail label="Address" value={formatAddress(address)} />
+          <Info label="Address" value={formatAddress(address)} />
         </div>
       </div>
     </div>
   );
 };
 
-// 🔹 Subcomponent to keep structure clean
-const Detail = ({ label, value }) => (
+const Info = ({ label, value, icon }) => (
   <div>
-    <div className="text-gray-500 font-medium mb-1">{label}</div>
-    <div className="text-gray-800">{value || "-"}</div>
+    <div className="text-gray-500 text-sm font-medium flex items-center gap-2 mb-1">
+      {icon && <span className="text-gray-400">{icon}</span>}
+      {label}
+    </div>
+    <div className="text-gray-800 text-base">{value || "-"}</div>
+  </div>
+);
+
+const StatusInfo = ({ label, isActive }) => (
+  <div>
+    <div className="text-gray-500 text-sm font-medium mb-1">{label}</div>
+    <span
+      className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${
+        isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"
+      }`}
+    >
+      {isActive ? "Active" : "Inactive"}
+    </span>
   </div>
 );
 

@@ -14,11 +14,17 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: mongoose.Schema.Types.ObjectId, ref: "Role", required: true },
 
+  // / 🌟 NEW FIELD: Super User Flag
+  isSuperUser: {
+    type: Boolean,
+    default: false, // by default users are not super users
+  },
+
   // 🌟 NEW FIELD: enterprise where user was created
   createInEnterprise: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Enterprise",
-    required: true,
+    default: null, // 👍 Allow null when isSuperUser is true
   },
 
   // 🌟 UPDATED FIELD: Mapped Enterprises (multi-select)
