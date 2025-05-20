@@ -13,13 +13,13 @@ const createEnterprise = asyncHandler(async (req, res) => {
     phoneNumber,
     gstNumber,
     panNumber,
-    address,
+    address = {},
     isActive,
     enterpriseType,
     parentEnterprise,
   } = req.body;
 
-  // Check for duplicate code
+  // Check for duplicate enterpriseCode
   const existing = await EnterpriseModel.findOne({ enterpriseCode });
   if (existing) {
     return res.status(400).json({ message: "Enterprise code already exists" });
@@ -32,6 +32,15 @@ const createEnterprise = asyncHandler(async (req, res) => {
     });
   }
 
+  // Destructure and sanitize address fields
+  const {
+    street = "",
+    city = "",
+    state = "",
+    country = "",
+    postalCode = "",
+  } = address;
+
   const enterprise = await EnterpriseModel.create({
     enterpriseCode,
     name,
@@ -40,15 +49,22 @@ const createEnterprise = asyncHandler(async (req, res) => {
     phoneNumber,
     gstNumber,
     panNumber,
-    address,
+    address: {
+      street,
+      city,
+      state,
+      country,
+      postalCode,
+    },
     isActive: isActive !== undefined ? isActive : true,
     enterpriseType,
-    parentEnterprise,
+    parentEnterprise: enterpriseType !== "HEAD" ? parentEnterprise : null,
   });
 
-  res
-    .status(201)
-    .json({ message: "Enterprise created successfully", enterprise });
+  res.status(201).json({
+    message: "Enterprise created successfully",
+    enterprise,
+  });
 });
 
 // @desc    Get all enterprises (with parent info populated)
@@ -95,31 +111,41 @@ const updateEnterprise = asyncHandler(async (req, res) => {
     phoneNumber,
     gstNumber,
     panNumber,
-    address,
+    address = {},
     isActive,
     enterpriseType,
     parentEnterprise,
   } = req.body;
 
-  // Update fields
+  // Update simple fields
   enterprise.name = name || enterprise.name;
   enterprise.ownerName = ownerName || enterprise.ownerName;
   enterprise.email = email || enterprise.email;
   enterprise.phoneNumber = phoneNumber || enterprise.phoneNumber;
   enterprise.gstNumber = gstNumber || enterprise.gstNumber;
   enterprise.panNumber = panNumber || enterprise.panNumber;
-  enterprise.address = address || enterprise.address;
   enterprise.isActive = isActive !== undefined ? isActive : enterprise.isActive;
 
+  // Update enterprise type and parent if provided
   if (enterpriseType) enterprise.enterpriseType = enterpriseType;
   if (parentEnterprise !== undefined)
     enterprise.parentEnterprise = parentEnterprise;
 
+  // Address fields update — nested and safely
+  enterprise.address = {
+    street: address.street || enterprise.address.street,
+    city: address.city || enterprise.address.city,
+    state: address.state || enterprise.address.state,
+    country: address.country || enterprise.address.country,
+    postalCode: address.postalCode || enterprise.address.postalCode,
+  };
+
   const updated = await enterprise.save();
 
-  res
-    .status(200)
-    .json({ message: "Enterprise updated successfully", enterprise: updated });
+  res.status(200).json({
+    message: "Enterprise updated successfully",
+    enterprise: updated,
+  });
 });
 
 // @desc    Delete enterprise

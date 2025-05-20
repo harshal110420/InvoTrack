@@ -21,7 +21,7 @@ const rootReducer = combineReducers({
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["permission", "roles", "menus", "modules"], // ✅ roleForm jaise forms ka temporary state store nahi karte mostly
+  whitelist: ["permission", "roles", "menus", "modules","enterprise"], // ✅ roleForm jaise forms ka temporary state store nahi karte mostly
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

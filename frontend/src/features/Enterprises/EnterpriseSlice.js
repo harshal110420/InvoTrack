@@ -1,12 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 
-// ✅ Fetch all enterprises
+// Async Thunks for CRUD operations and enterprise hierarchy
 export const fetchEnterprises = createAsyncThunk(
   "enterprise/fetchAll",
   async (_, thunkAPI) => {
     try {
       const res = await axiosInstance.get("/enterprise/all");
+      console.log("Enterprises fetched:", res.data.enterprises);
       return res.data.enterprises;
     } catch (err) {
       return thunkAPI.rejectWithValue(
@@ -16,7 +17,6 @@ export const fetchEnterprises = createAsyncThunk(
   }
 );
 
-// ✅ Create enterprise
 export const createEnterprise = createAsyncThunk(
   "enterprise/create",
   async (data, thunkAPI) => {
@@ -33,9 +33,12 @@ export const createEnterprise = createAsyncThunk(
 
 export const updateEnterprise = createAsyncThunk(
   "enterprise/update",
-  async ({ id, data }, thunkAPI) => {
+  async ({ id, updatedData }, thunkAPI) => {
     try {
-      const res = await axiosInstance.put(`/enterprise/update/${id}`, data);
+      const res = await axiosInstance.put(
+        `/enterprise/update/${id}`,
+        updatedData
+      );
       return res.data.enterprise;
     } catch (err) {
       return thunkAPI.rejectWithValue(
@@ -45,13 +48,12 @@ export const updateEnterprise = createAsyncThunk(
   }
 );
 
-// ✅ Delete enterprise
 export const deleteEnterprise = createAsyncThunk(
   "enterprise/delete",
   async (id, thunkAPI) => {
     try {
       await axiosInstance.delete(`/enterprise/delete/${id}`);
-      return id; // Return the ID of the deleted enterprise
+      return id;
     } catch (err) {
       return thunkAPI.rejectWithValue(
         err.response?.data?.message || "Delete failed"
@@ -60,7 +62,6 @@ export const deleteEnterprise = createAsyncThunk(
   }
 );
 
-// ✅ Get enterprise by ID
 export const getEnterpriseById = createAsyncThunk(
   "enterprise/getById",
   async (id, thunkAPI) => {
@@ -75,7 +76,6 @@ export const getEnterpriseById = createAsyncThunk(
   }
 );
 
-// ✅ Get children by parent ID
 export const getEnterprisesByParent = createAsyncThunk(
   "enterprise/getByParent",
   async (parentId, thunkAPI) => {
@@ -90,7 +90,6 @@ export const getEnterprisesByParent = createAsyncThunk(
   }
 );
 
-// ✅ Get full enterprise tree
 export const getEnterpriseTree = createAsyncThunk(
   "enterprise/getTree",
   async (enterpriseId, thunkAPI) => {
@@ -122,7 +121,6 @@ const enterpriseSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch All
       .addCase(fetchEnterprises.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -136,7 +134,6 @@ const enterpriseSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Create
       .addCase(createEnterprise.fulfilled, (state, action) => {
         state.enterpriseList.push(action.payload);
       })
@@ -144,7 +141,6 @@ const enterpriseSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Update
       .addCase(updateEnterprise.fulfilled, (state, action) => {
         const idx = state.enterpriseList.findIndex(
           (ent) => ent._id === action.payload._id
@@ -157,7 +153,6 @@ const enterpriseSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Delete
       .addCase(deleteEnterprise.fulfilled, (state, action) => {
         state.enterpriseList = state.enterpriseList.filter(
           (ent) => ent._id !== action.payload
@@ -167,7 +162,6 @@ const enterpriseSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Get by ID
       .addCase(getEnterpriseById.fulfilled, (state, action) => {
         state.selectedEnterprise = action.payload;
       })
@@ -175,7 +169,6 @@ const enterpriseSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Children by Parent
       .addCase(getEnterprisesByParent.fulfilled, (state, action) => {
         state.childrenEnterprises = action.payload;
       })
@@ -183,7 +176,6 @@ const enterpriseSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Full Tree
       .addCase(getEnterpriseTree.fulfilled, (state, action) => {
         state.enterpriseTree = action.payload;
       })
