@@ -67,6 +67,7 @@ export const getEnterpriseById = createAsyncThunk(
   async (id, thunkAPI) => {
     try {
       const res = await axiosInstance.get(`/enterprise/get/${id}`);
+      console.log("Enterprise fetched by ID:", res.data.enterprise);
       return res.data.enterprise;
     } catch (err) {
       return thunkAPI.rejectWithValue(
@@ -113,8 +114,15 @@ const enterpriseSlice = createSlice({
     enterpriseTree: null,
     loading: false,
     error: null,
+    createSuccess: false,
+    updateSuccess: false,
   },
   reducers: {
+    resetEnterpriseStatus: (state) => {
+      state.createSuccess = false;
+      state.updateSuccess = false;
+      state.error = null;
+    },
     clearSelectedEnterprise: (state) => {
       state.selectedEnterprise = null;
     },
@@ -135,13 +143,23 @@ const enterpriseSlice = createSlice({
       })
 
       .addCase(createEnterprise.fulfilled, (state, action) => {
+        state.loading = false;
+        state.createSuccess = true;
         state.enterpriseList.push(action.payload);
       })
       .addCase(createEnterprise.rejected, (state, action) => {
-        state.error = action.payload;
+        state.loading = false;
+        state.createSuccess = false;
+        state.error = action.payload || "Failed to create enterprise";
       })
-
+      // 🔽 Update Menu
+      .addCase(updateEnterprise.pending, (state) => {
+        state.loading = true;
+        state.updateSuccess = false;
+      })
       .addCase(updateEnterprise.fulfilled, (state, action) => {
+        state.loading = false;
+        state.updateSuccess = true;
         const idx = state.enterpriseList.findIndex(
           (ent) => ent._id === action.payload._id
         );
@@ -185,5 +203,6 @@ const enterpriseSlice = createSlice({
   },
 });
 
-export const { clearSelectedEnterprise } = enterpriseSlice.actions;
+export const { clearSelectedEnterprise, resetEnterpriseStatus } =
+  enterpriseSlice.actions;
 export default enterpriseSlice.reducer;

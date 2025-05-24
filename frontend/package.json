@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.6.1",
+    "@syncfusion/ej2-react-dropdowns": "^29.2.5",
     "axios": "^1.8.4",
     "clsx": "^2.1.1",
     "framer-motion": "^12.12.1",

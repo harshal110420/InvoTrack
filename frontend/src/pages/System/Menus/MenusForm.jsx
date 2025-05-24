@@ -70,9 +70,7 @@ const MenuForm = () => {
   // 🔽 Form Submit
   const handleSubmit = (e) => {
     e.preventDefault();
-    // 🔧 Build payload as per backend expectations
     const selectedModule = moduleList.find((m) => m.name === formData.module);
-
     const payload = {
       name: formData.name,
       menuId: formData.menuId,
