@@ -92,6 +92,7 @@ const EnterpriseForm = () => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
+      ...(name === "enterpriseType" && { parentEnterprise: "" }), // Reset on type change
     }));
   };
 
@@ -354,6 +355,7 @@ const EnterpriseForm = () => {
             {formData.enterpriseType !== "HEAD" && (
               <EnterpriseDropdownTree
                 enterpriseList={enterpriseList}
+                enterpriseType={formData.enterpriseType} // NEW LINE
                 value={formData.parentEnterprise}
                 onChange={(selectedId) =>
                   setFormData((prev) => ({

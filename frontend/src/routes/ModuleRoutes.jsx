@@ -7,7 +7,7 @@ import PermissionsPage from "../pages/System/Permission/PermissionPage";
 import EnterprisePage from "../pages/Administration/Enterprise/EnterprisePage";
 import EnterpriseDetailPage from "../pages/Administration/Enterprise/EnterpriseDetailPage";
 import EnterpriseForm from "../pages/Administration/Enterprise/EnterpriseForm";
-
+import UserPage from "../pages/Administration/User/UsersPage";
 // Import more pages as needed
 
 const ModuleRoutes = () => {
@@ -24,12 +24,20 @@ const ModuleRoutes = () => {
       <Route path="permission_management" element={<PermissionsPage />} />
 
       <Route path="enterprise_management" element={<EnterprisePage />} />
-      <Route path="/enterprise_management/create" element={<EnterpriseForm />} />
-      <Route path="/enterprise_management/update/:id" element={<EnterpriseForm />} />
+      <Route
+        path="/enterprise_management/create"
+        element={<EnterpriseForm />}
+      />
+      <Route
+        path="/enterprise_management/update/:id"
+        element={<EnterpriseForm />}
+      />
       <Route
         path="enterprise_management/get/:id"
         element={<EnterpriseDetailPage />}
       />
+
+      <Route path="user_management" element={<UserPage />} />
       {/* Add more module-specific routes here */}
     </Routes>
   );
