@@ -105,6 +105,7 @@ const updateEnterprise = asyncHandler(async (req, res) => {
   }
 
   const {
+    enterpriseCode,
     name,
     ownerName,
     email,
@@ -118,6 +119,7 @@ const updateEnterprise = asyncHandler(async (req, res) => {
   } = req.body;
 
   // Update simple fields
+  enterprise.enterpriseCode = enterpriseCode || enterprise.enterpriseCode;
   enterprise.name = name || enterprise.name;
   enterprise.ownerName = ownerName || enterprise.ownerName;
   enterprise.email = email || enterprise.email;

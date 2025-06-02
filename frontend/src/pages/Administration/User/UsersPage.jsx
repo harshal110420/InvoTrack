@@ -206,10 +206,7 @@ const UsersPage = () => {
                         permission="edit"
                       >
                         <button
-                          onClick={() => {
-                            dispatch(getUserById(user._id));
-                            navigate(`/admin/users/${user._id}`);
-                          }}
+                        onClick={(()=> navigate(`/module/admin-module/user_management/update/${user._id}`))}
                           title="View/Edit User"
                           className="text-blue-600 hover:text-blue-800"
                         >

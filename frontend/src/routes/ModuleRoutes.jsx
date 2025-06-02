@@ -8,6 +8,7 @@ import EnterprisePage from "../pages/Administration/Enterprise/EnterprisePage";
 import EnterpriseDetailPage from "../pages/Administration/Enterprise/EnterpriseDetailPage";
 import EnterpriseForm from "../pages/Administration/Enterprise/EnterpriseForm";
 import UserPage from "../pages/Administration/User/UsersPage";
+import UserForm from "../pages/Administration/User/UserForm";
 // Import more pages as needed
 
 const ModuleRoutes = () => {
@@ -38,6 +39,8 @@ const ModuleRoutes = () => {
       />
 
       <Route path="user_management" element={<UserPage />} />
+      <Route path="/user_management/create" element={<UserForm />} />
+      <Route path="/user_management/update/:id" element={<UserForm />} />
       {/* Add more module-specific routes here */}
     </Routes>
   );

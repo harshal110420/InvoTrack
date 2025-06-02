@@ -66,7 +66,8 @@ export const getUserById = createAsyncThunk(
   async (id, thunkAPI) => {
     try {
       const res = await axiosInstance.get(`/users/get/${id}`);
-      return res.data.user;
+      console.log("✅ Fetched user by ID:", res.data); // updated log
+      return res.data; // changed from res.data.user
     } catch (err) {
       return thunkAPI.rejectWithValue(
         err.response?.data?.message || "Failed to fetch user"
@@ -74,6 +75,7 @@ export const getUserById = createAsyncThunk(
     }
   }
 );
+
 
 const userSlice = createSlice({
   name: "users",
@@ -145,12 +147,17 @@ const userSlice = createSlice({
       .addCase(deleteUser.rejected, (state, action) => {
         state.error = action.payload;
       })
-
+      .addCase(getUserById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(getUserById.fulfilled, (state, action) => {
+        state.loading = false;
         state.selectedUser = action.payload;
       })
       .addCase(getUserById.rejected, (state, action) => {
         state.error = action.payload;
+        state.error = action.payload || "Something went wrong";
       });
   },
 });

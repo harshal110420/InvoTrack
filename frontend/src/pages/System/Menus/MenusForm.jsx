@@ -26,6 +26,7 @@ const MenuForm = () => {
   const isEditMode = Boolean(id); // check if we are in edit mode
   const [formData, setFormData] = useState(initialFormData);
   const { menuById } = useSelector((state) => state.menus);
+  // console.log("menuById:", menuById);
 
   const {
     createSuccess,
@@ -43,6 +44,7 @@ const MenuForm = () => {
     dispatch(fetchModules());
 
     if (id) {
+      // console.log("📌 Dispatching fetchMenusById with:", id);
       dispatch(fetchMenusById(id));
     }
 

@@ -112,6 +112,7 @@ const getUserByID = asyncHandler(async (req, res) => {
   const user = await UserModel.findById(req.params.id)
     .populate("role", "roleName")
     .select("-password");
+    console.log("User fetched by ID:", user);
   if (!user) {
     return res.status(404).json({ message: "User not found" });
   }
