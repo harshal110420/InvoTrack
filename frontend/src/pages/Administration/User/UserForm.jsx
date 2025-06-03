@@ -84,10 +84,6 @@ const UserForm = () => {
 
   const {
     enterpriseList = [],
-    loading,
-    error,
-    createSuccess,
-    updateSuccess,
   } = useSelector((state) => state.enterprise);
   const { roles } = useSelector((state) => state.roles);
   const { selectedUser } = useSelector((state) => state.users);
@@ -107,15 +103,17 @@ const UserForm = () => {
   // 2. Fetch user (edit mode only)
   useEffect(() => {
     if (isEditMode && selectedUser && Object.keys(selectedUser).length > 0) {
-      setFormData({
+      console.log("🟡 Edit mode active. Selected user:", selectedUser);
+
+      const formattedData = {
         fullName: selectedUser.fullName || "",
         email: selectedUser.email || "",
         username: selectedUser.username || "",
         password: "", // Password should not be pre-filled
         role: selectedUser.role?._id || "",
         isSuperUser: selectedUser.isSuperUser || false,
-        createInEnterprise: selectedUser.createInEnterprise?._id || "",
-        enterprises: selectedUser.enterprises?.map((e) => e._id) || [],
+        createInEnterprise: selectedUser.createInEnterprise || "",
+        enterprises: selectedUser.enterprises || [],
         businessName: selectedUser.businessName || "",
         phoneNumber: selectedUser.phoneNumber || "",
         address: {
@@ -127,7 +125,11 @@ const UserForm = () => {
         },
         taxIdentificationNumber: selectedUser.taxIdentificationNumber || "",
         isActive: selectedUser.isActive ?? true,
-      });
+      };
+
+      console.log("✅ Form data being set:", formattedData);
+
+      setFormData(formattedData);
     }
   }, [isEditMode, selectedUser]);
 
@@ -213,9 +215,14 @@ const UserForm = () => {
     e.preventDefault();
 
     const action = isEditMode ? updateUser : createUser;
+    console.log("🔍 Final formData on submit:", formData); // 🔥 Add this
+    const dataToSend = isEditMode
+      ? { ...formData, id } // id is from useParams()
+      : formData;
 
+    console.log("🔍 Final formData on submit:", dataToSend); // Updated data
     try {
-      await dispatch(action(formData)).unwrap(); // proper success/error handling
+      await dispatch(action(dataToSend)).unwrap(); // proper success/error handling
       toast.success(`User ${isEditMode ? "updated" : "created"} successfully`);
       navigate("/module/admin-module/user_management");
     } catch (err) {
@@ -335,7 +342,7 @@ const UserForm = () => {
               value={formData.role}
               onChange={handleChange}
               required
-              className="block w-full text-sm rounded-md border border-gray-300 bg-white px-1.5 py-1.5 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+              className="block w-full rounded-md border border-gray-300 bg-white px-1.5 py-1.5 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
             >
               <option value="" disabled>
                 Select Role

@@ -123,6 +123,7 @@ const getUserByID = asyncHandler(async (req, res) => {
 // @route   PUT /api/users/:id
 // @access  Private
 const updateUser = async (req, res) => {
+  console.log("📥 Incoming req.body to updateUser:", req.body); // 🔥
   try {
     const userId = req.params.id;
     const {

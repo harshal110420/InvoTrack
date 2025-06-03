@@ -35,8 +35,10 @@ export const createUser = createAsyncThunk(
 
 export const updateUser = createAsyncThunk(
   "user/update",
-  async ({ id, updatedData }, thunkAPI) => {
+  async (formData, thunkAPI) => {
     try {
+      console.log("Form data received for update:", formData);
+      const { id, ...updatedData } = formData; // 🪓 _id alag karo
       const res = await axiosInstance.put(`/users/update/${id}`, updatedData);
       return res.data.user;
     } catch (err) {
@@ -75,7 +77,6 @@ export const getUserById = createAsyncThunk(
     }
   }
 );
-
 
 const userSlice = createSlice({
   name: "users",
