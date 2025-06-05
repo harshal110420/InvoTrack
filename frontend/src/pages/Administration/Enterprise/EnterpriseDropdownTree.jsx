@@ -8,8 +8,15 @@ const EnterpriseDropdownTree = ({
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [expandedHeads, setExpandedHeads] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef(null);
 
+  // Collapse all when enterprise type changes
+  useEffect(() => {
+    setExpandedHeads({});
+  }, [enterpriseType]);
+
+  // Collapse dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -19,6 +26,37 @@ const EnterpriseDropdownTree = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Auto-expand on matching search term (only for BRANCH type)
+  useEffect(() => {
+    if (enterpriseType !== "BRANCH" || !searchTerm.trim()) {
+      setExpandedHeads({});
+      return;
+    }
+
+    const newExpanded = {};
+    const regionals = enterpriseList.filter(
+      (ent) =>
+        ent.enterpriseType === "REGIONAL" &&
+        ent.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    regionals.forEach((reg) => {
+      const headId = reg.parentEnterprise?._id;
+      if (headId) newExpanded[headId] = true;
+    });
+
+    enterpriseList.forEach((ent) => {
+      if (
+        ent.enterpriseType === "HEAD" &&
+        ent.name.toLowerCase().includes(searchTerm.toLowerCase())
+      ) {
+        newExpanded[ent._id] = true;
+      }
+    });
+
+    setExpandedHeads(newExpanded);
+  }, [searchTerm, enterpriseList, enterpriseType]);
 
   const renderEnterpriseTypeBadge = (type) => {
     const badgeColor = {
@@ -44,9 +82,12 @@ const EnterpriseDropdownTree = ({
   };
 
   const renderTreeBasedOnType = () => {
+    const filteredList = enterpriseList.filter((ent) =>
+      ent.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     if (enterpriseType === "REGIONAL") {
-      // Only show HEADs
-      return enterpriseList
+      return filteredList
         .filter((ent) => ent.enterpriseType === "HEAD")
         .map((ent) => (
           <div
@@ -57,6 +98,7 @@ const EnterpriseDropdownTree = ({
             onClick={() => {
               onChange(ent._id);
               setDropdownOpen(false);
+              setSearchTerm("");
             }}
           >
             <span className="text-sm text-gray-700">{ent.name}</span>
@@ -66,7 +108,6 @@ const EnterpriseDropdownTree = ({
     }
 
     if (enterpriseType === "BRANCH") {
-      // HEAD with expandable REGIONALs
       const heads = enterpriseList.filter(
         (ent) => ent.enterpriseType === "HEAD"
       );
@@ -76,9 +117,17 @@ const EnterpriseDropdownTree = ({
 
       return heads.map((head) => {
         const isExpanded = expandedHeads[head._id];
-        const children = regionals.filter(
-          (reg) => reg.parentEnterprise?._id === head._id
+        const filteredChildren = regionals.filter(
+          (reg) =>
+            reg.parentEnterprise?._id === head._id &&
+            reg.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
+
+        const showHead =
+          head.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          filteredChildren.length > 0;
+
+        if (!showHead) return null;
 
         return (
           <div key={head._id} className="mb-1">
@@ -93,8 +142,8 @@ const EnterpriseDropdownTree = ({
             </div>
             {isExpanded && (
               <div className="ml-4 border-l pl-2 border-gray-300">
-                {children.length ? (
-                  children.map((reg) => (
+                {filteredChildren.length ? (
+                  filteredChildren.map((reg) => (
                     <div
                       key={reg._id}
                       className={`cursor-pointer px-2 py-1 hover:bg-gray-100 rounded ${
@@ -103,6 +152,7 @@ const EnterpriseDropdownTree = ({
                       onClick={() => {
                         onChange(reg._id);
                         setDropdownOpen(false);
+                        setSearchTerm("");
                       }}
                     >
                       <span className="text-sm text-gray-700">{reg.name}</span>
@@ -111,7 +161,7 @@ const EnterpriseDropdownTree = ({
                   ))
                 ) : (
                   <div className="text-xs text-gray-400 px-2 py-1">
-                    No regional enterprises
+                    No matching regional enterprises
                   </div>
                 )}
               </div>
@@ -121,7 +171,6 @@ const EnterpriseDropdownTree = ({
       });
     }
 
-    // Default fallback (if HEAD selected or invalid)
     return (
       <div className="text-gray-500 text-sm px-2 py-2">
         Select an enterprise type to continue.
@@ -133,7 +182,7 @@ const EnterpriseDropdownTree = ({
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <label className="block text-gray-600 text-base font-semibold mb-0.5">
+      <label className="block text-sm font-medium text-gray-700 mb-1">
         Parent Enterprise
       </label>
       <button
@@ -148,8 +197,18 @@ const EnterpriseDropdownTree = ({
       </button>
 
       {dropdownOpen && (
-        <div className="absolute z-10 bg-white border border-gray-300 rounded mt-1 w-full max-h-60 overflow-y-auto shadow-lg">
-          {renderTreeBasedOnType()}
+        <div className="absolute z-10 bg-white border border-gray-300 rounded mt-1 w-full max-h-72 overflow-y-auto shadow-lg">
+          <div className="p-2 border-b">
+            <input
+              type="text"
+              placeholder="Search enterprises..."
+              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <div className="p-1">{renderTreeBasedOnType()}</div>
         </div>
       )}
     </div>

@@ -1,16 +1,19 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchUsers, getUserById } from "../../../features/users/userSlice";
-import ButtonWrapper from "../../../components/ButtonWrapper";
+import { fetchUsers } from "../../../features/users/userSlice";
+import { fetchEnterprises } from "../../../features/Enterprises/EnterpriseSlice";
 import { useNavigate } from "react-router-dom";
 import debounce from "lodash.debounce";
+import ButtonWrapper from "../../../components/ButtonWrapper";
+import { PlusCircle, Pencil } from "lucide-react";
+import EnterpriseDropdownTree from "./EnterpriseDropdownTree";
 
 const UsersPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { userList = [], loading, error } = useSelector((state) => state.users);
+  const { enterpriseList = [] } = useSelector((state) => state.enterprise);
 
-  // Local state for inputs
   const [searchInputs, setSearchInputs] = useState({
     username: "",
     fullName: "",
@@ -25,9 +28,9 @@ const UsersPage = () => {
     phoneNumber: "",
     role: "",
     isActive: "",
+    enterprise: "",
   });
 
-  // Debounce setup
   const debouncedSetSearch = useMemo(
     () =>
       debounce((field, value) => {
@@ -40,14 +43,11 @@ const UsersPage = () => {
   );
 
   useEffect(() => {
-    return () => {
-      debouncedSetSearch.cancel(); // cleanup on unmount
-    };
-  }, [debouncedSetSearch]);
-
-  useEffect(() => {
     dispatch(fetchUsers());
-  }, [dispatch]);
+    dispatch(fetchEnterprises());
+
+    return () => debouncedSetSearch.cancel();
+  }, [dispatch, debouncedSetSearch]);
 
   const handleTextInputChange = (field, value) => {
     setSearchInputs((prev) => ({
@@ -66,6 +66,11 @@ const UsersPage = () => {
 
   const filteredUsers = useMemo(() => {
     return userList.filter((user) => {
+      const matchesEnterprise = filters.enterprise
+        ? user.createInEnterprise === filters.enterprise ||
+          user.enterprises?.includes(filters.enterprise)
+        : true;
+
       return (
         user.username.toLowerCase().includes(filters.username.toLowerCase()) &&
         user.fullName.toLowerCase().includes(filters.fullName.toLowerCase()) &&
@@ -78,149 +83,167 @@ const UsersPage = () => {
           ? filters.isActive === "active"
             ? user.isActive === true
             : user.isActive === false
-          : true)
+          : true) &&
+        matchesEnterprise
       );
     });
   }, [userList, filters]);
 
   return (
-    <div className="max-w-7xl px-2 sm:px-3 lg:px-3 py-2 font-sans h-full flex flex-col">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 shrink-0">
-        <h2 className="text-2xl font-semibold text-gray-800 flex items-center gap-2">
-          User Management
-        </h2>
+    <div className="max-w-full px-4 py-6 font-sans">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <h1 className="text-3xl font-bold text-gray-800">User Management</h1>
+
         <ButtonWrapper subModule="User Management" permission="new">
           <button
-            className="bg-blue-600 text-sm hover:bg-blue-700 text-white px-2 py-1.5 rounded-md transition"
+            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded-md shadow-sm transition-all duration-200 hover:shadow-md"
             onClick={() =>
               navigate("/module/admin-module/user_management/create")
             }
           >
-            Create User
+            <PlusCircle className="w-4 h-4" />
+            <span>Create</span>
           </button>
         </ButtonWrapper>
       </div>
 
-      {loading && <p className="text-gray-600">Loading users...</p>}
-      {error && <p className="text-red-600">Error: {error}</p>}
+      {/* Filter by Enterprise */}
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <label className="text-sm font-medium text-gray-700">
+          Filter by Enterprise:
+        </label>
+        <EnterpriseDropdownTree
+          enterprises={enterpriseList}
+          selected={filters.enterprise}
+          onChange={(val) => handleFilterChange("enterprise", val)}
+        />
+        <button
+          onClick={() => handleFilterChange("enterprise", "")}
+          className="text-sm text-blue-600 hover:underline"
+        >
+          Clear
+        </button>
+      </div>
 
-      {!loading && (
-        <div className="w-full overflow-x-auto rounded-lg shadow-md border border-gray-200">
-          <table className="min-w-[900px] w-full bg-white rounded-lg overflow-hidden">
-            <thead className="bg-gray-100 text-gray-700 text-xs uppercase tracking-wider">
-              <tr>
-                <th className="px-3 py-1.5 text-left">Username</th>
-                <th className="px-3 py-1.5 text-left">Full Name</th>
-                <th className="px-3 py-1.5 text-left">Email</th>
-                <th className="px-3 py-1.5 text-left">Phone</th>
-                <th className="px-3 py-1.5 text-left">Role</th>
-                <th className="px-3 py-1.5 text-left">Status</th>
-                <th className="px-3 py-1.5 text-center">Actions</th>
-              </tr>
-              <tr className="bg-white text-gray-600 text-xs">
-                {["username", "fullName", "email", "phoneNumber"].map(
-                  (field) => (
-                    <th className="px-3 py-1.5" key={field}>
-                      <input
-                        type="text"
-                        value={searchInputs[field]}
-                        onChange={(e) =>
-                          handleTextInputChange(field, e.target.value)
-                        }
-                        placeholder={`Search ${field}`}
-                        className="w-full px-2 py-1 border border-gray-300 rounded-md text-xs"
-                      />
-                    </th>
-                  )
-                )}
-                <th className="px-3 py-1.5">
-                  <select
-                    value={filters.role}
-                    onChange={(e) => handleFilterChange("role", e.target.value)}
-                    className="w-full px-2 py-1 border border-gray-300 rounded-md text-xs"
-                  >
-                    <option value="">All Roles</option>
-                    {[
-                      ...new Set(
-                        userList.map((u) => u.role?.displayName).filter(Boolean)
-                      ),
-                    ].map((role) => (
-                      <option key={role} value={role}>
-                        {role}
-                      </option>
-                    ))}
-                  </select>
-                </th>
-                <th className="px-3 py-1.5">
-                  <select
-                    value={filters.isActive}
+      {/* Table */}
+      <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
+        <table className="min-w-[1000px] w-full text-sm text-gray-700">
+          <thead className="bg-gray-100 text-xs uppercase">
+            <tr>
+              <th className="px-3 py-1.5 text-left">Username</th>
+              <th className="px-3 py-1.5 text-left">Full Name</th>
+              <th className="px-3 py-1.5 text-left">Email</th>
+              <th className="px-3 py-1.5 text-left">Phone</th>
+              <th className="px-3 py-1.5 text-left">Role</th>
+              <th className="px-3 py-1.5 text-left">Status</th>
+              <th className="px-4 py-2 text-center">Actions</th>
+            </tr>
+            <tr className="bg-white sticky top-0 z-10 shadow-sm text-sm">
+              {["username", "fullName", "email", "phoneNumber"].map((field) => (
+                <th className="px-3 py-2" key={field}>
+                  <input
+                    type="text"
+                    value={searchInputs[field]}
                     onChange={(e) =>
-                      handleFilterChange("isActive", e.target.value)
+                      handleTextInputChange(field, e.target.value)
                     }
-                    className="w-full px-2 py-1 border border-gray-300 rounded-md text-xs"
-                  >
-                    <option value="">All</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
+                    placeholder={`Search ${field}`}
+                    className="w-full px-2 py-1 border text-xs border-gray-300 rounded"
+                  />
                 </th>
-                <th></th>
+              ))}
+              <th className="px-3 py-2">
+                <select
+                  value={filters.role}
+                  onChange={(e) => handleFilterChange("role", e.target.value)}
+                className="w-full px-2 py-1 border text-xs border-gray-300 rounded"
+                >
+                  <option value="">All Roles</option>
+                  {[
+                    ...new Set(
+                      userList.map((u) => u.role?.displayName).filter(Boolean)
+                    ),
+                  ].map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+                </select>
+              </th>
+              <th className="px-3 py-2">
+                <select
+                  value={filters.isActive}
+                  onChange={(e) =>
+                    handleFilterChange("isActive", e.target.value)
+                  }
+                className="w-full px-2 py-1 border text-xs border-gray-300 rounded"
+                >
+                  <option value="">All</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredUsers.length === 0 ? (
+              <tr>
+                <td colSpan="7" className="text-center py-6 text-gray-500">
+                  No users found.
+                </td>
               </tr>
-            </thead>
-            <tbody className="text-gray-800 text-sm">
-              {filteredUsers.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="text-center py-6 text-gray-500">
-                    No users found.
+            ) : (
+              filteredUsers.map((user, index) => (
+                <tr
+                  key={user._id}
+                  className={`${
+                    index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                  } hover:bg-gray-100 transition`}
+                >
+                  <td className="px-4 py-2">{user.username}</td>
+                  <td className="px-4 py-2">{user.fullName}</td>
+                  <td className="px-4 py-2">{user.email}</td>
+                  <td className="px-4 py-2">{user.phoneNumber}</td>
+                  <td className="px-4 py-2">{user.role?.displayName || "-"}</td>
+                  <td className="px-4 py-2">
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                        user.isActive
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {user.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2 text-center">
+                    <ButtonWrapper
+                      subModule="User Management"
+                      permission="edit"
+                    >
+                      <button
+                        onClick={() =>
+                          navigate(
+                            `/module/admin-module/user_management/update/${user._id}`
+                          )
+                        }
+                        className="text-blue-600 hover:text-blue-800 transition"
+                        title="Edit User"
+                      >
+                        <Pencil className="w-4 h-4 inline" />
+                      </button>
+                    </ButtonWrapper>
                   </td>
                 </tr>
-              ) : (
-                filteredUsers.map((user, index) => (
-                  <tr
-                    key={user._id}
-                    className={`hover:bg-gray-50 ${
-                      index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    }`}
-                  >
-                    <td className="px-3 py-2">{user.username}</td>
-                    <td className="px-3 py-2">{user.fullName}</td>
-                    <td className="px-3 py-2">{user.email}</td>
-                    <td className="px-3 py-2">{user.phoneNumber}</td>
-                    <td className="px-3 py-2">
-                      {user.role?.displayName || "-"}
-                    </td>
-                    <td className="px-3 py-2">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                          user.isActive
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {user.isActive ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2 text-center">
-                      <ButtonWrapper
-                        subModule="User Management"
-                        permission="edit"
-                      >
-                        <button
-                        onClick={(()=> navigate(`/module/admin-module/user_management/update/${user._id}`))}
-                          title="View/Edit User"
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          ✏️
-                        </button>
-                      </ButtonWrapper>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {loading && <p className="mt-4 text-gray-600">Loading users...</p>}
+      {error && <p className="mt-4 text-red-600">Error: {error}</p>}
     </div>
   );
 };

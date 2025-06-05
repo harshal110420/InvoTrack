@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import ButtonWrapper from "../../../components/ButtonWrapper";
 import { useNavigate } from "react-router-dom";
 import debounce from "lodash.debounce";
+import { Eye, Pencil } from "lucide-react";
 
 const FlatListView = ({ data }) => {
   const navigate = useNavigate();
@@ -67,9 +68,9 @@ const FlatListView = ({ data }) => {
   });
 
   return (
-    <div className="w-full overflow-x-auto rounded-lg shadow-md border border-gray-200">
-      <table className="min-w-[800px] w-full bg-white rounded-lg overflow-hidden">
-        <thead className="bg-gray-100 text-gray-700 text-xs uppercase tracking-wider">
+    <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
+      <table className="min-w-[1000px] w-full text-sm text-gray-700">
+        <thead className="bg-gray-100 text-xs uppercase">
           <tr>
             <th className="px-3 py-1.5 text-left">Code</th>
             <th className="px-3 py-1.5 text-left">Name</th>
@@ -78,14 +79,14 @@ const FlatListView = ({ data }) => {
             <th className="px-3 py-1.5 text-left">Status</th>
             <th className="px-3 py-1.5 text-center">Actions</th>
           </tr>
-          <tr className="bg-white border-t border-gray-200 text-xs">
+          <tr className="bg-white sticky top-0 z-10 shadow-sm text-sm">
             <th className="px-3 py-2">
               <input
                 type="text"
                 placeholder="Search code"
                 value={searchCode}
                 onChange={(e) => setSearchCode(e.target.value)}
-                className="w-full px-2 py-1 border text-sm border-gray-300 rounded"
+                className="w-full px-2 py-1 border text-xs border-gray-300 rounded"
               />
             </th>
             <th className="px-3 py-2">
@@ -94,32 +95,36 @@ const FlatListView = ({ data }) => {
                 placeholder="Search name"
                 value={searchName}
                 onChange={(e) => setSearchName(e.target.value)}
-                className="w-full px-2 py-1 border text-sm border-gray-300 rounded"
+                className="w-full px-2 py-1 border text-xs border-gray-300 rounded"
               />
             </th>
             <th className="px-3 py-2">
-              <input
-                type="text"
-                placeholder="Search type"
+              <select
                 value={searchType}
                 onChange={(e) => setSearchType(e.target.value)}
-                className="w-full px-2 py-1 border text-sm border-gray-300 rounded"
-              />
+                className="w-full px-2 py-1 border text-xs border-gray-300 rounded"
+              >
+                <option value="">All Types</option>
+                <option value="HEAD">HEAD</option>
+                <option value="REGIONAL">REGIONAL</option>
+                <option value="BRANCH">BRANCH</option>
+              </select>
             </th>
+
             <th className="px-3 py-2">
               <input
                 type="text"
                 placeholder="Search owner"
                 value={searchOwner}
                 onChange={(e) => setSearchOwner(e.target.value)}
-                className="w-full px-2 py-1 border text-sm border-gray-300 rounded"
+                className="w-full px-2 py-1 border text-xs border-gray-300 rounded"
               />
             </th>
             <th className="px-3 py-2">
               <select
                 value={searchStatus}
                 onChange={(e) => setSearchStatus(e.target.value)}
-                className="w-full px-2 py-1 border text-sm border-gray-300 rounded"
+                className="w-full px-2 py-1 border text-xs border-gray-300 rounded"
               >
                 <option value="all">All</option>
                 <option value="active">Active</option>
@@ -147,7 +152,7 @@ const FlatListView = ({ data }) => {
                   index % 2 === 0 ? "bg-white" : "bg-gray-50"
                 }`}
               >
-                <td className="px-3 py-2 whitespace-nowrap font-medium">
+                <td className="px-3 py-2 whitespace-nowrap font-normal">
                   {ent.enterpriseCode}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap font-normal">
@@ -183,10 +188,10 @@ const FlatListView = ({ data }) => {
                           `/module/admin-module/enterprise_management/update/${ent._id}`
                         )
                       }
-                      className="text-blue-600 hover:text-blue-800"
+                      className="text-blue-600 hover:text-blue-800 transition"
                       title="Edit Enterprise"
                     >
-                      ✏️
+                      <Pencil className="w-4 h-4 inline" />
                     </button>
                   </ButtonWrapper>
 
@@ -203,7 +208,7 @@ const FlatListView = ({ data }) => {
                       className="text-green-600 hover:text-green-800"
                       title="View Details"
                     >
-                      👁️
+                      <Eye className="w-4 h-4 inline" />
                     </button>
                   </ButtonWrapper>
                 </td>

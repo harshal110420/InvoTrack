@@ -11,6 +11,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import EnterpriseMultiSelectTree from "./EnterpriseMultiSelectTree";
 import EnterpriseHierarchicalDropdown from "./EnterpriseHierarchicalDropdown";
+import { Check, StepBack, StepForward, X } from "lucide-react";
 
 const initialFormData = {
   fullName: "",
@@ -74,6 +75,13 @@ const findRelatives = (allEnterprises, selectedId) => {
   return result;
 };
 
+const steps = [
+  "User Information",
+  "Enterprise Access",
+  "Address Information",
+  "Additional Details",
+];
+
 const UserForm = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -81,15 +89,24 @@ const UserForm = () => {
   const isEditMode = Boolean(id);
   const [formData, setFormData] = useState(initialFormData);
   const [filteredEnterprises, setFilteredEnterprises] = useState([]);
+  const [isSuperUserFlag, setIsSuperUserFlag] = useState(formData.isSuperUser);
 
-  const {
-    enterpriseList = [],
-  } = useSelector((state) => state.enterprise);
+  const { enterpriseList = [], loading } = useSelector(
+    (state) => state.enterprise
+  );
   const { roles } = useSelector((state) => state.roles);
   const { selectedUser } = useSelector((state) => state.users);
-  console.log("selectedUser:", selectedUser);
-  // Log the initial state of enterpriseList and roles
-  // 1. Fetch roles & enterprises ONLY once
+
+  const [currentStep, setCurrentStep] = useState(0);
+
+  const goNext = () => {
+    if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
+  };
+
+  const goBack = () => {
+    if (currentStep > 0) setCurrentStep(currentStep - 1);
+  };
+
   useEffect(() => {
     dispatch(fetchEnterprises());
     dispatch(fetchRoles());
@@ -132,10 +149,6 @@ const UserForm = () => {
       setFormData(formattedData);
     }
   }, [isEditMode, selectedUser]);
-
-  useEffect(() => {
-    console.log("Fetched selectedUser from store:", selectedUser);
-  }, [selectedUser]);
 
   // 3. Once user and enterpriseList are loaded, set relatives
   useEffect(() => {
@@ -181,6 +194,7 @@ const UserForm = () => {
 
   // Handle SuperUser checkbox click - clear related enterprise fields
   const handleSuperUserChange = (checked) => {
+    setIsSuperUserFlag(checked);
     if (checked) {
       setFormData((prev) => ({
         ...prev,
@@ -215,12 +229,10 @@ const UserForm = () => {
     e.preventDefault();
 
     const action = isEditMode ? updateUser : createUser;
-    console.log("🔍 Final formData on submit:", formData); // 🔥 Add this
     const dataToSend = isEditMode
       ? { ...formData, id } // id is from useParams()
       : formData;
 
-    console.log("🔍 Final formData on submit:", dataToSend); // Updated data
     try {
       await dispatch(action(dataToSend)).unwrap(); // proper success/error handling
       toast.success(`User ${isEditMode ? "updated" : "created"} successfully`);
@@ -239,316 +251,370 @@ const UserForm = () => {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="max-w-full p-5 bg-white rounded-lg shadow-md space-y-8"
-      noValidate
-    >
-      {/* Title */}
-      <h2 className="text-2xl font-semibold text-gray-800 border-b pb-3 mb-6">
-        {isEditMode ? "Edit User Details" : "Create New User"}
-      </h2>
-
-      {/* User Information Section */}
-      <section className="space-y-4">
-        <h3 className="text-xl font-semibold text-gray-700 border-b pb-2">
-          User Information
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <label
-              htmlFor="fullName"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Full Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="fullName"
-              name="fullName"
-              value={formData.fullName}
-              onChange={handleChange}
-              required
-              className="block w-full rounded-md border border-gray-300 px-1 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Email Address <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="block w-full rounded-md border border-gray-300 px-1 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="username"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Username <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              required
-              className="block w-full rounded-md border border-gray-300 px-1 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Password {isEditMode ? "(Leave blank to keep unchanged)" : ""}
-              {!isEditMode && <span className="text-red-500">*</span>}
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className="block w-full rounded-md border border-gray-300 px-1 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
-              {...(!isEditMode && { required: true })}
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="role"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Role <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              required
-              className="block w-full rounded-md border border-gray-300 bg-white px-1.5 py-1.5 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
-            >
-              <option value="" disabled>
-                Select Role
-              </option>
-              {roles.map((role) => (
-                <option key={role._id} value={role._id}>
-                  {role.displayName}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center space-x-3 mt-8 md:mt-6">
-            <input
-              type="checkbox"
-              id="isSuperUser"
-              name="isSuperUser"
-              checked={formData.isSuperUser}
-              onChange={(e) => handleSuperUserChange(e.target.checked)}
-              className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label
-              htmlFor="isSuperUser"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Super User
-            </label>
-          </div>
-        </div>
-      </section>
-
-      {/* Enterprise Access Section */}
-      <section className="space-y-4">
-        <h3 className="text-xl font-semibold text-gray-700 border-b pb-2">
-          Enterprise Access
-        </h3>
-
-        <div className="space-y-4">
-          {/* <label
-            htmlFor="createInEnterprise"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Create In Enterprise
-          </label> */}
-          <EnterpriseHierarchicalDropdown
-            allEnterprises={enterpriseList}
-            selectedValue={formData.createInEnterprise}
-            onChange={handleCreateInEnterpriseChange}
-            disabled={formData.isSuperUser}
-          />
-
-          {/* <label
-            htmlFor="enterprises"
-            className="block text-sm font-medium text-gray-700 mt-6"
-          >
-            Assigned Enterprises
-          </label> */}
-          <EnterpriseMultiSelectTree
-            allEnterprises={filteredEnterprises}
-            selectedIds={formData.enterprises}
-            onSelectionChange={handleEnterpriseSelection}
-            disabledIds={
-              formData.createInEnterprise ? [formData.createInEnterprise] : []
-            }
-            disabled={formData.isSuperUser}
-          />
-        </div>
-      </section>
-
-      {/* Address Section */}
-      <section className="space-y-4">
-        <h3 className="text-xl font-semibold text-gray-700 border-b pb-2">
-          Address Information
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            { label: "Street", name: "address.street" },
-            { label: "City", name: "address.city" },
-            { label: "State", name: "address.state" },
-            { label: "Country", name: "address.country" },
-            { label: "Postal Code", name: "address.postalCode" },
-          ].map(({ label, name }) => (
-            <div key={name}>
-              <label
-                htmlFor={name}
-                className="block text-sm font-medium text-gray-700 mb-1"
+    <div className="flex flex-col h-full">
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col flex-grow max-w-full pt-5 pr-5 pl-5 pb-2 bg-white rounded-lg shadow-md"
+        noValidate
+      >
+        {/* Title */}
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-800 border-b pb-3 mb-6">
+            {isEditMode ? "Edit User Details" : "Create New User"}
+          </h2>
+          <div className="flex border-b border-gray-300 mb-6 overflow-x-auto">
+            {steps.map((step, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => setCurrentStep(index)}
+                className={`px-4 py-2 text-sm font-medium border-b-2 transition-all duration-200 ${
+                  currentStep === index
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-blue-500"
+                }`}
               >
-                {label}
-              </label>
-              <input
-                type="text"
-                id={name}
-                name={name}
-                value={
-                  name.includes("address.")
-                    ? formData.address[name.split(".")[1]]
-                    : formData[name]
-                }
-                onChange={handleChange}
-                className="block w-full rounded-md border border-gray-300 px-1 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
-              />
+                {step}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Step Tabs */}
+
+        <div className="flex-grow overflow-auto">
+          {currentStep === 0 && (
+            <div>
+              {/* User Information Section */}
+              <section className="space-y-4">
+                <h3 className="text-xl font-semibold text-gray-700 border-b pb-2">
+                  User Information
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <label
+                      htmlFor="fullName"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Full Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="fullName"
+                      name="fullName"
+                      value={formData.fullName}
+                      onChange={handleChange}
+                      required
+                      className="block w-full rounded-md border border-gray-300 px-2 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Email Address <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      className="block w-full rounded-md border border-gray-300 px-2 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="username"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Username <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="username"
+                      name="username"
+                      value={formData.username}
+                      onChange={handleChange}
+                      required
+                      className="block w-full rounded-md border border-gray-300 px-2 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="password"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Password{" "}
+                      {isEditMode ? "(Leave blank to keep unchanged)" : ""}
+                      {!isEditMode && <span className="text-red-500">*</span>}
+                    </label>
+                    <input
+                      type="password"
+                      id="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      className="block w-full rounded-md border border-gray-300 px-2 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+                      {...(!isEditMode && { required: true })}
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="role"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Role <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      id="role"
+                      name="role"
+                      value={formData.role}
+                      onChange={handleChange}
+                      required
+                      className="block w-full rounded-md border border-gray-300 bg-white px-1.5 py-1.5 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+                    >
+                      <option value="" disabled>
+                        Select Role
+                      </option>
+                      {roles.map((role) => (
+                        <option key={role._id} value={role._id}>
+                          {role.displayName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex items-center space-x-3 mt-8 md:mt-6">
+                    <input
+                      type="checkbox"
+                      id="isSuperUser"
+                      name="isSuperUser"
+                      checked={formData.isSuperUser}
+                      onChange={(e) => handleSuperUserChange(e.target.checked)}
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label
+                      htmlFor="isSuperUser"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Super User
+                    </label>
+                  </div>
+                </div>
+              </section>
             </div>
-          ))}
+          )}
+          {currentStep === 1 && (
+            <div>
+              {/* Enterprise Access Section */}
+              <section className="space-y-4">
+                <h3 className="text-xl font-semibold text-gray-700 border-b pb-2">
+                  Enterprise Access
+                </h3>
+
+                <div className="space-y-4">
+                  <EnterpriseHierarchicalDropdown
+                    allEnterprises={enterpriseList}
+                    selectedValue={formData.createInEnterprise}
+                    onChange={handleCreateInEnterpriseChange}
+                    disabled={isSuperUserFlag}
+                  />
+                  <EnterpriseMultiSelectTree
+                    allEnterprises={filteredEnterprises}
+                    selectedIds={formData.enterprises}
+                    onSelectionChange={handleEnterpriseSelection}
+                    disabledIds={
+                      formData.createInEnterprise
+                        ? [formData.createInEnterprise]
+                        : []
+                    }
+                    disabled={isSuperUserFlag}
+                  />
+                </div>
+              </section>
+            </div>
+          )}
+          {currentStep === 2 && (
+            <div>
+              {/* Address Section */}
+              <section className="space-y-4">
+                <h3 className="text-xl font-semibold text-gray-700 border-b pb-2">
+                  Address Information
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {[
+                    { label: "Street", name: "address.street" },
+                    { label: "City", name: "address.city" },
+                    { label: "State", name: "address.state" },
+                    { label: "Country", name: "address.country" },
+                    { label: "Postal Code", name: "address.postalCode" },
+                  ].map(({ label, name }) => (
+                    <div key={name}>
+                      <label
+                        htmlFor={name}
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        {label}
+                      </label>
+                      <input
+                        type="text"
+                        id={name}
+                        name={name}
+                        value={
+                          name.includes("address.")
+                            ? formData.address[name.split(".")[1]]
+                            : formData[name]
+                        }
+                        onChange={handleChange}
+                        className="block w-full rounded-md border border-gray-300 px-2 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+          )}
+          {currentStep === 3 && (
+            <div>
+              {/* Additional Information Section */}
+              <section className="space-y-4">
+                <h3 className="text-xl font-semibold text-gray-700 border-b pb-2">
+                  Additional Details
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <label
+                      htmlFor="businessName"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Business Name
+                    </label>
+                    <input
+                      type="text"
+                      id="businessName"
+                      name="businessName"
+                      value={formData.businessName}
+                      onChange={handleChange}
+                      className="block w-full rounded-md border border-gray-300 px-2 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="phoneNumber"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Phone Number
+                    </label>
+                    <input
+                      type="text"
+                      id="phoneNumber"
+                      name="phoneNumber"
+                      value={formData.phoneNumber}
+                      onChange={handleChange}
+                      className="block w-full rounded-md border border-gray-300 px-2 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="taxIdentificationNumber"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Tax Identification Number
+                    </label>
+                    <input
+                      type="text"
+                      id="taxIdentificationNumber"
+                      name="taxIdentificationNumber"
+                      value={formData.taxIdentificationNumber}
+                      onChange={handleChange}
+                      className="block w-full rounded-md border border-gray-300 px-2 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-3 mt-6 md:mt-0">
+                    <input
+                      type="checkbox"
+                      id="isActive"
+                      name="isActive"
+                      checked={formData.isActive}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          isActive: e.target.checked,
+                        }))
+                      }
+                      className="h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                    />
+                    <label
+                      htmlFor="isActive"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Active User
+                    </label>
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
         </div>
-      </section>
 
-      {/* Additional Information Section */}
-      <section className="space-y-4">
-        <h3 className="text-xl font-semibold text-gray-700 border-b pb-2">
-          Additional Details
-        </h3>
+        {/* Navigation Buttons */}
+        {/* <div className="flex justify-between mt-8">
+          <button
+            type="button"
+            onClick={goBack}
+            disabled={currentStep === 0}
+            // className="text-sm px-4 py-2 border border-gray-400 rounded hover:bg-gray-100 disabled:opacity-50"
+            className="border-2 border-blue-400 text-xs font-semibold rounded-full text-black px-2 py-2 hover:bg-blue-400 hover:text-white disabled:opacity-50 flex items-center"
+          >
+            <StepBack className="w-4 h-4 mr-1" /> Back
+          </button>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <label
-              htmlFor="businessName"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Business Name
-            </label>
-            <input
-              type="text"
-              id="businessName"
-              name="businessName"
-              value={formData.businessName}
-              onChange={handleChange}
-              className="block w-full rounded-md border border-gray-300 px-1 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
-            />
-          </div>
+          <button
+            type="button"
+            onClick={goNext}
+            disabled={currentStep === steps.length - 1}
+            // className="text-sm px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+            className="border-2 border-blue-400 text-xs font-semibold rounded-full text-black px-2 py-2 hover:bg-blue-400 hover:text-white disabled:opacity-50 flex items-center"
+          >
+            <StepForward className="w-4 h-4 mr-1" /> Next
+          </button>
+        </div> */}
 
-          <div>
-            <label
-              htmlFor="phoneNumber"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Phone Number
-            </label>
-            <input
-              type="text"
-              id="phoneNumber"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleChange}
-              className="block w-full rounded-md border border-gray-300 px-1 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
-            />
-          </div>
+        {/* Submit and Cancel Buttons */}
+        <div className="flex justify-end items-center gap-1.5 mt-6">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="border-2 border-amber-400 text-xs font-semibold rounded-full text-black px-3 py-1 hover:bg-amber-400 hover:text-white disabled:opacity-50 flex items-center"
+          >
+            <X className="w-4 h-4 mr-1" />
+            Back
+          </button>
 
-          <div>
-            <label
-              htmlFor="taxIdentificationNumber"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Tax Identification Number
-            </label>
-            <input
-              type="text"
-              id="taxIdentificationNumber"
-              name="taxIdentificationNumber"
-              value={formData.taxIdentificationNumber}
-              onChange={handleChange}
-              className="block w-full rounded-md border border-gray-300 px-1 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
-            />
-          </div>
-
-          <div className="flex items-center space-x-3 mt-6 md:mt-0">
-            <input
-              type="checkbox"
-              id="isActive"
-              name="isActive"
-              checked={formData.isActive}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  isActive: e.target.checked,
-                }))
-              }
-              className="h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-            />
-            <label
-              htmlFor="isActive"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Active User
-            </label>
-          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="border-2 border-green-400 text-xs font-semibold rounded-full text-black px-3 py-1 hover:bg-green-400 hover:text-white disabled:opacity-50 flex items-center"
+          >
+            <Check className="w-4 h-4 mr-1" />
+            {loading ? "Saving..." : id ? "Update" : "Submit"}
+          </button>
         </div>
-      </section>
-
-      {/* Submit and Cancel Buttons */}
-      <section className="pt-6 flex justify-end space-x-4 border-t">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="inline-flex justify-center py-2 px-6 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-500"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          className="inline-flex justify-center py-2 px-6 border border-transparent rounded-md shadow-sm text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-600"
-        >
-          {isEditMode ? "Update User" : "Create User"}
-        </button>
-      </section>
-    </form>
+      </form>
+    </div>
   );
 };
 

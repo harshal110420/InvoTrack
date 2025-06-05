@@ -19,6 +19,20 @@ const getNestedEnterprises = (enterpriseList) => {
   return roots;
 };
 
+const findParentChain = (tree, targetId, path = []) => {
+  for (let node of tree) {
+    if (node._id === targetId) return [...path];
+    if (node.children?.length) {
+      const result = findParentChain(node.children, targetId, [
+        ...path,
+        node._id,
+      ]);
+      if (result) return result;
+    }
+  }
+  return null;
+};
+
 const EnterpriseHierarchicalDropdown = ({
   allEnterprises = [],
   selectedValue,
@@ -67,6 +81,7 @@ const EnterpriseHierarchicalDropdown = ({
     );
     const matchIds = new Set(matches.map((m) => m._id));
 
+    const fullTree = getNestedEnterprises(allEnterprises);
     const recursivelyFilter = (nodes) =>
       nodes
         .map((node) => {
@@ -78,7 +93,17 @@ const EnterpriseHierarchicalDropdown = ({
         })
         .filter(Boolean);
 
-    setFilteredTree(recursivelyFilter(getNestedEnterprises(allEnterprises)));
+    const newTree = recursivelyFilter(fullTree);
+    setFilteredTree(newTree);
+
+    // Auto-expand matching node paths
+    const expandedSet = new Set();
+    matches.forEach((match) => {
+      const chain = findParentChain(fullTree, match._id);
+      if (chain) chain.forEach((id) => expandedSet.add(id));
+      expandedSet.add(match._id);
+    });
+    setExpandedIds([...expandedSet]);
   };
 
   const renderEnterpriseTypeBadge = (type) => {

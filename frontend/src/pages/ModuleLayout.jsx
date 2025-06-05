@@ -87,9 +87,11 @@ const ModuleLayout = () => {
             <Home className="w-5 h-5" />
           </button>
         </div>
-        <ModuleRoutes />
-        {/* Actual module content */}
-        <Outlet context={{ setIsDirty }} />
+        {/* <div className="flex-1 px-2"> */}
+          <ModuleRoutes />
+          {/* Actual module content */}
+          <Outlet context={{ setIsDirty }} />
+        {/* </div> */}
       </div>
     </div>
   );

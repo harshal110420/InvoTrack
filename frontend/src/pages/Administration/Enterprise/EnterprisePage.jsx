@@ -10,6 +10,7 @@ import FlatListView from "./FlatListView";
 import TreeView from "./TreeView";
 import ButtonWrapper from "../../../components/ButtonWrapper";
 import { useNavigate } from "react-router-dom";
+import { PlusCircle } from "lucide-react";
 
 const EnterprisePage = () => {
   const dispatch = useDispatch();
@@ -50,9 +51,9 @@ const EnterprisePage = () => {
   };
 
   return (
-    <div className="max-w-7xl px-2 sm:px-3 lg:px-3 py-2 font-sans h-full flex flex-col">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 shrink-0">
-        <h2 className="text-2xl font-semibold text-gray-800 flex items-center gap-2">
+    <div className="max-w-full px-4 py-6 font-sans">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <h2 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
           Enterprise Management
         </h2>
 
@@ -79,12 +80,13 @@ const EnterprisePage = () => {
 
           <ButtonWrapper subModule="Enterprise Management" permission="new">
             <button
-              className="bg-blue-600 text-sm hover:bg-blue-700 text-white px-2 py-1.5 rounded-md transition"
+            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded-md shadow-sm transition-all duration-200 hover:shadow-md"
               onClick={() =>
                 navigate("/module/admin-module/enterprise_management/create")
               }
             >
-              Create Enterprise
+             <PlusCircle className="w-4 h-4" />
+            <span>Create</span>
             </button>
           </ButtonWrapper>
         </div>
