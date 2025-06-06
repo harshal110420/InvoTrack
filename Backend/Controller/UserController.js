@@ -112,7 +112,7 @@ const getUserByID = asyncHandler(async (req, res) => {
   const user = await UserModel.findById(req.params.id)
     .populate("role", "roleName")
     .select("-password");
-    console.log("User fetched by ID:", user);
+  console.log("User fetched by ID:", user);
   if (!user) {
     return res.status(404).json({ message: "User not found" });
   }
@@ -124,6 +124,7 @@ const getUserByID = asyncHandler(async (req, res) => {
 // @access  Private
 const updateUser = async (req, res) => {
   console.log("📥 Incoming req.body to updateUser:", req.body); // 🔥
+
   try {
     const userId = req.params.id;
     const {
@@ -142,7 +143,14 @@ const updateUser = async (req, res) => {
       isActive,
     } = req.body;
 
-    // Scenario 3: SUPER ADMIN
+    // 🔐 Handle password hashing manually if provided
+    let hashedPassword = undefined;
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      hashedPassword = await bcrypt.hash(password, salt);
+    }
+
+    // 🧑‍💼 SUPER USER FLOW
     if (isSuperUser) {
       const updatedUser = await UserModel.findByIdAndUpdate(
         userId,
@@ -150,7 +158,7 @@ const updateUser = async (req, res) => {
           fullName,
           email,
           username,
-          ...(password && { password }),
+          ...(hashedPassword && { password: hashedPassword }), // ✅ Use hashed password
           role,
           isSuperUser: true,
           createInEnterprise: null,
@@ -164,8 +172,9 @@ const updateUser = async (req, res) => {
         { new: true }
       );
 
-      if (!updatedUser)
+      if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
+      }
 
       return res.status(200).json({
         message: "Super admin updated successfully",
@@ -173,7 +182,7 @@ const updateUser = async (req, res) => {
       });
     }
 
-    // Non-super user - validate enterprise scope
+    // 🛡️ NON-SUPER USER FLOW (Enterprise validation)
     if (!createInEnterprise || !enterprises?.length) {
       return res.status(400).json({
         message:
@@ -184,6 +193,7 @@ const updateUser = async (req, res) => {
     const { mappedEnterprises } = await mapEnterprisesByHierarchy(
       createInEnterprise
     );
+
     const invalid = enterprises.filter(
       (eid) => !mappedEnterprises.includes(eid)
     );
@@ -201,7 +211,7 @@ const updateUser = async (req, res) => {
         fullName,
         email,
         username,
-        ...(password && { password }),
+        ...(hashedPassword && { password: hashedPassword }), // ✅ Use hashed password
         role,
         isSuperUser: false,
         createInEnterprise,
@@ -215,12 +225,14 @@ const updateUser = async (req, res) => {
       { new: true }
     );
 
-    if (!updatedUser)
+    if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
+    }
 
-    res
-      .status(200)
-      .json({ message: "User updated successfully", user: updatedUser });
+    res.status(200).json({
+      message: "User updated successfully",
+      user: updatedUser,
+    });
   } catch (err) {
     console.error("UpdateUser Error:", err);
     res.status(500).json({ message: "Server error", error: err.message });
