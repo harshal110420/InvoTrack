@@ -57,14 +57,19 @@ const EnterpriseHierarchicalDropdown = ({
   }, [allEnterprises]);
 
   useEffect(() => {
+    if (!open) return;
+
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setOpen(false);
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
 
   const toggleExpand = (id) => {
     setExpandedIds((prev) =>
@@ -76,12 +81,31 @@ const EnterpriseHierarchicalDropdown = ({
     const term = e.target.value.toLowerCase();
     setSearch(term);
 
+    const fullTree = getNestedEnterprises(allEnterprises);
+
+    if (!term.trim()) {
+      // RESET TO DEFAULT STATE (show minimal expanded view)
+      setFilteredTree(fullTree);
+
+      // Optional: expand only parent chain of selected
+      if (selectedId) {
+        const chain = findParentChain(fullTree, selectedId);
+        const newExpanded = chain ? [...chain] : [];
+        if (!newExpanded.includes(selectedId)) newExpanded.push(selectedId);
+        setExpandedIds(newExpanded);
+      } else {
+        setExpandedIds([]); // Or collapse completely
+      }
+
+      return;
+    }
+
+    // SEARCH FILTER LOGIC
     const matches = allEnterprises.filter((ent) =>
       ent.name.toLowerCase().includes(term)
     );
     const matchIds = new Set(matches.map((m) => m._id));
 
-    const fullTree = getNestedEnterprises(allEnterprises);
     const recursivelyFilter = (nodes) =>
       nodes
         .map((node) => {
@@ -96,7 +120,7 @@ const EnterpriseHierarchicalDropdown = ({
     const newTree = recursivelyFilter(fullTree);
     setFilteredTree(newTree);
 
-    // Auto-expand matching node paths
+    // Expand matching paths
     const expandedSet = new Set();
     matches.forEach((match) => {
       const chain = findParentChain(fullTree, match._id);

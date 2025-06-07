@@ -6,22 +6,23 @@ const loginUser = async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // validate input
     if (!username || !password) {
       return res
         .status(400)
         .json({ message: "username and password are required" });
     }
 
-    const user = await UserModel.findOne({ username }).populate("role");
+    const user = await UserModel.findOne({ username })
+      .populate("role")
+      .populate("enterprises")
+      .populate("createInEnterprise");
+
     if (!user) return res.status(401).json({ message: "Invalid User" });
 
-    // Compare passwords
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await user.comparePassword(password);
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
 
-    // Create JWT token
     const token = jwt.sign(
       {
         id: user._id,
@@ -39,6 +40,12 @@ const loginUser = async (req, res) => {
         fullName: user.fullName,
         username: user.username,
         role: user.role?.roleName,
+        isSuperUser: user.isSuperUser,
+        enterprises: user.enterprises,
+        createInEnterprise: user.createInEnterprise,
+        selectedEnterprise: user.isSuperUser
+          ? null
+          : user.createInEnterprise?._id || user.enterprises?.[0]?._id || null,
       },
     });
   } catch (error) {
