@@ -35,6 +35,12 @@ const userSchema = new mongoose.Schema({
     },
   ],
 
+  lastLoggedInEnterprise: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Enterprise",
+    default: null,
+  },
+
   businessName: { type: String }, // Only for retailers
   phoneNumber: { type: String },
   address: {

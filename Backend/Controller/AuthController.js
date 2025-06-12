@@ -29,7 +29,7 @@ const loginUser = async (req, res) => {
         role: user.role?.roleName,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: "1d" }
     );
 
     res.status(200).json({
@@ -45,7 +45,10 @@ const loginUser = async (req, res) => {
         createInEnterprise: user.createInEnterprise,
         selectedEnterprise: user.isSuperUser
           ? null
-          : user.createInEnterprise?._id || user.enterprises?.[0]?._id || null,
+          : user.lastLoggedInEnterprise?._id ||
+            user.createInEnterprise?._id ||
+            user.enterprises?.[0]?._id ||
+            null,
       },
     });
   } catch (error) {
@@ -64,21 +67,67 @@ const logoutUser = async (req, res) => {
 
 const getMe = async (req, res) => {
   try {
-    const user = await UserModel.findById(req.user.id).populate("role");
+    const user = await UserModel.findById(req.user.id)
+      .populate("role")
+      .populate("enterprises")
+      .populate("createInEnterprise")
+      .populate("lastLoggedInEnterprise");
 
     if (!user) return res.status(404).json({ message: "User not found" });
+
+    const selectedEnterprise = user.isSuperUser
+      ? null
+      : user.lastLoggedInEnterprise?._id ||
+        user.createInEnterprise?._id ||
+        user.enterprises?.[0]?._id ||
+        null;
+
     res.status(200).json({
       id: user._id,
       fullName: user.fullName,
       username: user.username,
       role: user.role?.roleName,
+      isSuperUser: user.isSuperUser,
+      enterprises: user.enterprises,
+      createInEnterprise: user.createInEnterprise,
+      selectedEnterprise,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+const updateLastUsedEnterprise = async (req, res) => {
+  try {
+    const userId = req.user.id; // Assuming auth middleware adds this
+    const { enterpriseId } = req.body;
+
+    if (!enterpriseId) {
+      return res
+        .status(400)
+        .json({ message: "Missing enterpriseId in request body" });
+    }
+
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      userId,
+      { lastLoggedInEnterprise: enterpriseId },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "Enterprise switched successfully",
+      selectedEnterprise: updatedUser.lastLoggedInEnterprise,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Failed to update enterprise", error: error.message });
+  }
+};
+
 module.exports = {
   loginUser,
   logoutUser,
   getMe,
+  updateLastUsedEnterprise,
 };
