@@ -9,8 +9,11 @@ import {
 } from "../../../features/menus/menuSlice";
 import { fetchModules } from "../../../features/Modules/ModuleSlice";
 import { useNavigate, useParams } from "react-router-dom";
+import { Check, X } from "lucide-react";
+import { toast } from "react-toastify";
 
 const initialFormData = {
+  parentCode: "root",
   name: "",
   module: "",
   category: "",
@@ -19,199 +22,288 @@ const initialFormData = {
   orderBy: "",
 };
 
+const steps = ["Basic Info", "Module Details"];
+
 const MenuForm = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { id } = useParams(); // for edit
-  const isEditMode = Boolean(id); // check if we are in edit mode
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
+
   const [formData, setFormData] = useState(initialFormData);
-  const { menuById } = useSelector((state) => state.menus);
-  // console.log("menuById:", menuById);
+  const [currentStep, setCurrentStep] = useState(0);
 
-  const {
-    createSuccess,
-    updateSuccess,
-    loading,
-    error,
-    list: menuList,
-  } = useSelector((state) => state.menus);
-
+  const { menuById, loading } = useSelector((state) => state.menus);
   const { list: moduleList, loading: moduleLoading } = useSelector(
     (state) => state.modules
   );
 
   useEffect(() => {
     dispatch(fetchModules());
-
-    if (id) {
-      // console.log("📌 Dispatching fetchMenusById with:", id);
+    dispatch(fetchGroupedMenus());
+    if (isEditMode) {
       dispatch(fetchMenusById(id));
     }
-
-    dispatch(fetchGroupedMenus());
   }, [dispatch, id]);
 
-  // 🔽 Handle edit mode
   useEffect(() => {
     if (isEditMode && menuById && Object.keys(menuById).length > 0) {
       setFormData({
         name: menuById.name || "",
-        module: menuById.moduleId?.name || "", // Use moduleId.name if it's an object
+        module: menuById.moduleId?.name || "",
         category: menuById.type || "",
         menuId: menuById.menuId || "",
+        parentCode: menuById.parentCode || "root",
         isActive: menuById.isActive ?? true,
         orderBy: menuById.orderBy || "",
       });
     }
   }, [isEditMode, menuById]);
 
-  useEffect(() => {
-    console.log("Fetched menuById from store:", menuById);
-  }, [menuById]);
-
-  // 🔽 Form Submit
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     const selectedModule = moduleList.find((m) => m.name === formData.module);
+
     const payload = {
       name: formData.name,
       menuId: formData.menuId,
-      type: formData.category, // category is same as backend's "type"
-      moduleId: selectedModule?._id, // 💡 must be ObjectId, not name
-      parentCode: "root", // defaulting to root for now
-      orderBy: parseInt(formData.orderBy || "0"), // assuming orderBy is optional
+      type: formData.category,
+      moduleId: selectedModule?._id,
+      parentCode: formData.parentCode || "root",
+      orderBy: parseInt(formData.orderBy || "0"),
       isActive: formData.isActive,
     };
-    if (id) {
-      dispatch(updateMenu({ id, updatedData: payload }));
-    } else {
-      console.log("Form Data Being Submitted: ", payload);
-      dispatch(createMenu(payload));
+
+    const action = isEditMode
+      ? updateMenu({ id, updatedData: payload })
+      : createMenu(payload);
+
+    try {
+      await dispatch(action).unwrap();
+      toast.success(`Menu ${isEditMode ? "updated" : "created"} successfully`);
+      navigate("/module/system-module/menu_management");
+    } catch (err) {
+      console.error("❌ Menu form submission error:", err);
+      const errorMsg =
+        err?.message ||
+        err?.error ||
+        "Something went wrong. Please check the form and try again.";
+      toast.error(errorMsg);
     }
   };
 
-  // 🔽 Handle input changes
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
-  // 🔽 Navigate on success
-  useEffect(() => {
-    if (createSuccess || updateSuccess) {
-      dispatch(resetMenuStatus());
-      navigate("/module/system-module/menu_management"); // Change path as per your route
-    }
-  }, [createSuccess, updateSuccess, dispatch, navigate]);
-
   return (
-    <div className="max-w-xl mx-auto bg-white shadow p-6 rounded-xl mt-6">
-      <h2 className="text-2xl font-bold mb-4">{id ? "Edit" : "Create"} Menu</h2>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Menu Name */}
+    <div className="flex flex-col h-full">
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col flex-grow max-w-full pt-5 pr-5 pl-5 pb-2 bg-white rounded-lg shadow-md"
+        noValidate
+      >
         <div>
-          <label className="block text-gray-700 mb-1">Menu Name</label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            className="w-full border p-2 rounded"
-            placeholder="Enter menu name"
-          />
-        </div>
+          <h2 className="text-2xl font-semibold text-gray-800 border-b pb-3 mb-6">
+            {isEditMode ? "Edit Menu Details" : "Create New Menu"}
+          </h2>
 
-        {/* Module Dropdown */}
-        <div>
-          <label className="block text-gray-700 mb-1">Module</label>
-          <select
-            name="module"
-            value={formData.module}
-            onChange={handleChange}
-            required
-            className="w-full border p-2 rounded"
-          >
-            <option value="">-- Select Module --</option>
-            {moduleLoading && <option>Loading...</option>}
-            {moduleList.map((mod) => (
-              <option key={mod._id} value={mod.name}>
-                {mod.name}
-              </option>
+          <div className="flex border-b border-gray-300 mb-6 overflow-x-auto">
+            {steps.map((step, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => setCurrentStep(index)}
+                className={`px-4 py-2 text-sm font-medium border-b-2 transition-all duration-200 ${
+                  currentStep === index
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-blue-500"
+                }`}
+              >
+                {step}
+              </button>
             ))}
-          </select>
+          </div>
         </div>
 
-        {/* Category Dropdown */}
-        <div>
-          <label className="block text-gray-700 mb-1">Category</label>
-          <select
-            name="category"
-            value={formData.category}
-            onChange={handleChange}
-            required
-            className="w-full border p-2 rounded"
+        <div className="flex-grow overflow-auto">
+          {currentStep === 0 && (
+            <section className="space-y-4">
+              <h3 className="text-xl font-semibold text-gray-700 border-b pb-2">
+                Basic Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Menu Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    className="block w-full rounded-md border border-gray-300 px-2 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="menuId"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Menu ID <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="menuId"
+                    name="menuId"
+                    value={formData.menuId}
+                    onChange={handleChange}
+                    required
+                    className="block w-full rounded-md border border-gray-300 px-2 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="parentCode"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Parent Code <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="parentCode"
+                    name="parentCode"
+                    value={formData.parentCode}
+                    onChange={handleChange}
+                    required
+                    className="block w-full rounded-md border border-gray-300 px-2 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="isActive"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Is Active?
+                  </label>
+                  <input
+                    type="checkbox"
+                    id="isActive"
+                    name="isActive"
+                    checked={formData.isActive}
+                    onChange={handleChange}
+                    className="w-6 h-6"
+                  />
+                </div>
+              </div>
+            </section>
+          )}
+
+          {currentStep === 1 && (
+            <section className="space-y-4">
+              <h3 className="text-xl font-semibold text-gray-700 border-b pb-2">
+                Module Details
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label
+                    htmlFor="module"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Module <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="module"
+                    id="module"
+                    value={formData.module}
+                    onChange={handleChange}
+                    required
+                    className="w-full border p-1.5 text-sm rounded border-gray-300"
+                  >
+                    <option value="">-- Select Module --</option>
+                    {moduleList.map((module) => (
+                      <option key={module._id} value={module.name}>
+                        {module.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="category"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Category <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="category"
+                    id="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    required
+                    className="w-full border p-1.5 text-sm rounded border-gray-300"
+                  >
+                    <option value="">-- Select Category --</option>
+                    <option value="Master">Master</option>
+                    <option value="Transaction">Transaction</option>
+                    <option value="Report">Report</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="orderBy"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Order By
+                  </label>
+                  <input
+                    type="number"
+                    id="orderBy"
+                    name="orderBy"
+                    value={formData.orderBy}
+                    onChange={handleChange}
+                    className="block w-full rounded-md border border-gray-300 px-2 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+              </div>
+            </section>
+          )}
+        </div>
+
+        <div className="flex justify-end items-center gap-1.5 mt-6">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="border-2 border-amber-400 text-xs font-semibold rounded-full text-black px-3 py-1 hover:bg-amber-400 hover:text-white disabled:opacity-50 flex items-center"
           >
-            <option value="">-- Select Category --</option>
-            <option value="Master">Master</option>
-            <option value="Transaction">Transaction</option>
-            <option value="Report">Report</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-gray-700 mb-1">Menu ID</label>
-          <input
-            type="text"
-            name="menuId"
-            value={formData.menuId}
-            onChange={handleChange}
-            required
-            className="w-full border p-2 rounded"
-            placeholder="Enter unique menu ID (e.g., accountmaster)"
-          />
-        </div>
-        <div>
-          <label className="block text-gray-700 mb-1">Order By</label>
-          <input
-            type="number"
-            name="orderBy"
-            value={formData.orderBy}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-            placeholder="Enter order number for sorting"
-          />
-        </div>
-        <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            name="isActive"
-            checked={formData.isActive}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                isActive: e.target.checked,
-              }))
-            }
-            className="w-4 h-4"
-          />
-          <label className="text-gray-700">Is Active?</label>
-        </div>
+            <X className="w-4 h-4 mr-1" />
+            Back
+          </button>
 
-        {/* Submit */}
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-          disabled={loading}
-        >
-          {loading ? "Saving..." : id ? "Update Menu" : "Create Menu"}
-        </button>
-
-        {/* Error */}
-        {error && <p className="text-red-600 mt-2">{error}</p>}
+          <button
+            type="submit"
+            disabled={loading}
+            className="border-2 border-green-400 text-xs font-semibold rounded-full text-black px-3 py-1 hover:bg-green-400 hover:text-white disabled:opacity-50 flex items-center"
+          >
+            <Check className="w-4 h-4 mr-1" />
+            {loading ? "Saving..." : id ? "Update" : "Submit"}
+          </button>
+        </div>
       </form>
     </div>
   );

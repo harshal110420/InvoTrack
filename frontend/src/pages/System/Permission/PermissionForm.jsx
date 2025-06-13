@@ -30,7 +30,7 @@ const PermissionForm = ({ selectedRole, onClose }) => {
   useEffect(() => {
     if (selectedRole) {
       console.log("Fetching permissions for selectedRole:", selectedRole);
-      dispatch(fetchAllPermissions(selectedRole));
+      dispatch(fetchAllPermissions());
     }
   }, [selectedRole, dispatch]);
 

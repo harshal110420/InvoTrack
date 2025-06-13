@@ -6,21 +6,26 @@ import {
   createRole,
   updateRole,
 } from "../../../features/Roles/roleFormSlice";
+import { Check, X } from "lucide-react";
+import { toast } from "react-toastify";
+
+const initialFormData = {
+  roleName: "",
+  displayName: "",
+  status: true,
+  isSystemRole: false,
+};
+
+const steps = ["Basic Info"];
 
 const RoleForm = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { roleId } = useParams();
-
   const isEditMode = Boolean(roleId);
   const { currentRole, loading } = useSelector((state) => state.roleForm);
-
-  const [formData, setFormData] = useState({
-    roleName: "",
-    displayName: "",
-    status: "active",
-    isSystemRole: false,
-  });
+  const [formData, setFormData] = useState(initialFormData);
+  const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
     if (isEditMode) {
@@ -33,8 +38,8 @@ const RoleForm = () => {
       setFormData({
         roleName: currentRole.roleName || "",
         displayName: currentRole.displayName || "",
-        status: currentRole.status || "active",
-        isSystemRole: currentRole.isSystemRole || false,
+        status: currentRole.status ?? true,
+        isSystemRole: currentRole.isSystemRole ?? false,
       });
     }
   }, [currentRole, isEditMode]);
@@ -47,21 +52,32 @@ const RoleForm = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const payload = {
-      ...formData,
-      roleName: formData.roleName.trim().toLowerCase().replace(/\s+/g, "_"),
-    };
+    const action = isEditMode ? updateRole : createRole;
+    const formattedRoleName = formData.roleName
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "_");
 
-    if (isEditMode) {
-      dispatch(updateRole({ id: roleId, data: payload }));
-    } else {
-      dispatch(createRole(payload));
+    const dataToSend = isEditMode
+      ? { id: roleId, data: { ...formData, roleName: formattedRoleName } }
+      : { ...formData, roleName: formattedRoleName };
+
+    try {
+      await dispatch(action(dataToSend)).unwrap(); // success or error throw
+      toast.success(`Role ${isEditMode ? "updated" : "created"} successfully`);
+      navigate("/module/admin-module/role_management");
+    } catch (err) {
+      console.error("❌ Role form submission error:", err);
+      const errorMsg =
+        err?.message ||
+        err?.error ||
+        "Something went wrong. Please check the form and try again.";
+
+      toast.error(errorMsg);
     }
-
-    navigate("/module/admin-module/role_management");
   };
 
   if (isEditMode && loading) {
@@ -69,84 +85,148 @@ const RoleForm = () => {
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <div className="bg-white shadow-lg rounded-2xl p-6 border border-gray-200">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-          {isEditMode ? "Edit Role" : "Create New Role"}
-        </h2>
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* roleName */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Role Slug (Internal)
-            </label>
-            <input
-              type="text"
-              name="roleName"
-              value={formData.roleName}
-              onChange={handleChange}
-              disabled={isEditMode}
-              required
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-            />
+    <div className="flex flex-col h-full">
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col flex-grow max-w-full pt-5 pr-5 pl-5 pb-2 bg-white rounded-lg shadow-md"
+        noValidate
+      >
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-800 border-b pb-3 mb-6">
+            {isEditMode ? "Edit Role Details" : "Create New Role"}
+          </h2>
+          <div className="flex border-b border-gray-300 mb-6 overflow-x-auto">
+            {steps.map((step, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => setCurrentStep(index)}
+                className={`px-4 py-2 text-sm font-medium border-b-2 transition-all duration-200 ${
+                  currentStep === index
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-blue-500"
+                }`}
+              >
+                {step}
+              </button>
+            ))}
           </div>
+        </div>
 
-          {/* displayName */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Display Name
-            </label>
-            <input
-              type="text"
-              name="displayName"
-              value={formData.displayName}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        <div className="flex-grow overflow-auto">
+          {currentStep === 0 && (
+            <div>
+              <section className="space-y-4">
+                <h3 className="text-xl font-semibold text-gray-700 border-b pb-2">
+                  Basic Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <label
+                      htmlFor="roleName"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Role name{" "}
+                      <span className="text-red-500">
+                        *Use underscore ( _ ) instead of space
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      id="roleName"
+                      name="roleName"
+                      value={formData.roleName}
+                      onChange={handleChange}
+                      required
+                      className="block w-full rounded-md border border-gray-300 px-2 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="displayName"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Display name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="displayName"
+                      name="displayName"
+                      value={formData.displayName}
+                      onChange={handleChange}
+                      required
+                      className="block w-full rounded-md border border-gray-300 px-2 py-1 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="status"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Is Active? <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="checkbox"
+                      id="status"
+                      name="status"
+                      checked={formData.status}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          status: e.target.checked,
+                        }))
+                      }
+                      className="w-6 h-6"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="isSystemRole"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Is Super user?
+                    </label>
+                    <input
+                      type="checkbox"
+                      id="isSystemRole"
+                      name="isSystemRole"
+                      checked={formData.isSystemRole}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          isSystemRole: e.target.checked,
+                        }))
+                      }
+                      className="w-6 h-6"
+                    />
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
+        </div>
 
-          {/* status */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Status
-            </label>
-            <select
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
-
-          {/* isSystemRole */}
-          <div className="flex items-center space-x-3">
-            <input
-              type="checkbox"
-              name="isSystemRole"
-              checked={formData.isSystemRole}
-              onChange={handleChange}
-              disabled
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-            />
-            <label className="text-sm text-gray-700">
-              System Role (auto-created)
-            </label>
-          </div>
+        {/* Submit and Cancel Buttons */}
+        <div className="flex justify-end items-center gap-1.5 mt-6">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="border-2 border-amber-400 text-xs font-semibold rounded-full text-black px-3 py-1 hover:bg-amber-400 hover:text-white disabled:opacity-50 flex items-center"
+          >
+            <X className="w-4 h-4 mr-1" />
+            Back
+          </button>
 
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-300 disabled:opacity-50"
+            className="border-2 border-green-400 text-xs font-semibold rounded-full text-black px-3 py-1 hover:bg-green-400 hover:text-white disabled:opacity-50 flex items-center"
           >
-            {loading ? "Saving..." : isEditMode ? "Update Role" : "Create Role"}
+            <Check className="w-4 h-4 mr-1" />
+            {loading ? "Saving..." : roleId ? "Update" : "Submit"}
           </button>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   );
 };

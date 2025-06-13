@@ -4,6 +4,7 @@ import { fetchRoles } from "../../../features/Roles/rolesSlice";
 import ButtonWrapper from "../../../components/ButtonWrapper";
 import { useNavigate } from "react-router-dom";
 import debounce from "lodash.debounce";
+import { PlusCircle } from "lucide-react";
 
 const RolesPage = () => {
   const dispatch = useDispatch();
@@ -42,23 +43,16 @@ const RolesPage = () => {
   });
 
   return (
-    <div className="max-w-7xl px-2 sm:px-3 lg:px-3 py-2 font-sans h-full flex flex-col">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 shrink-0">
-        <h2 className="text-2xl font-semibold text-gray-800 flex items-center gap-2">
-          Manage Roles
-        </h2>
-        <ButtonWrapper
-          module="Administration"
-          subModule="Role Management"
-          permission="new"
-        >
+    <div className="max-w-full px-4 py-6 font-sans">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <h1 className="text-3xl font-bold text-gray-800">Manage Roles</h1>
+        <ButtonWrapper subModule="Role Management" permission="new">
           <button
-            className="bg-blue-600 text-sm hover:bg-blue-700 text-white px-2 py-1.5 rounded-md transition"
-            onClick={() =>
-              navigate("/module/admin-module/role_management/create")
-            }
+            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded-md shadow-sm transition-all duration-200 hover:shadow-md"
+            onClick={() => navigate("/module/admin-module/role_management/create")}
           >
-            Create Role
+            <PlusCircle className="w-4 h-4" />
+            <span>Create</span>
           </button>
         </ButtonWrapper>
       </div>
@@ -67,16 +61,16 @@ const RolesPage = () => {
       {error && <p className="text-red-600">Error: {error}</p>}
 
       {!loading && (
-        <div className="w-full overflow-x-auto rounded-lg shadow-md border border-gray-200">
-          <table className="min-w-[800px] w-full bg-white rounded-lg overflow-hidden">
-            <thead className="bg-gray-100 text-gray-700 text-xs uppercase tracking-wider">
+        <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
+          <table className="min-w-[1000px] w-full text-sm text-gray-700">
+            <thead className="bg-gray-100 text-xs uppercase">
               <tr>
                 <th className="px-3 py-1.5 text-left">Role Name</th>
                 <th className="px-3 py-1.5 text-left">Status</th>
                 <th className="px-3 py-1.5 text-center">Actions</th>
               </tr>
-              <tr className="bg-white text-gray-600 text-xs">
-                <th className="px-3 py-1.5">
+              <tr className="bg-white sticky top-0 z-10 shadow-sm text-sm">
+                <th className="px-3 py-2">
                   <input
                     type="text"
                     value={searchInput}
@@ -85,7 +79,7 @@ const RolesPage = () => {
                     className="w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-xs"
                   />
                 </th>
-                <th className="px-3 py-1.5">
+                <th className="px-3 py-2">
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}

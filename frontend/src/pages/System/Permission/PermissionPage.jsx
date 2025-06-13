@@ -1,3 +1,14 @@
+/**
+ * ⚠️ NOTE:
+ * This page is meant for assigning/editing permissions for existing roles only.
+ * No "Create New" button is shown here.
+ *
+ * To create a new permission entry:
+ *   - First create a new Role in the Roles page.
+ *   - Then it will automatically appear in this page.
+ *   - Use ✏️ icon to assign permissions to it.
+ */
+
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllPermissions } from "../../../features/permissions/permissionSlice";
@@ -51,22 +62,20 @@ const PermissionsPage = () => {
   };
 
   return (
-    <div className="max-w-7xl px-2 sm:px-3 lg:px-3 py-2 font-sans h-full flex flex-col">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 shrink-0">
-        <h2 className="text-2xl font-semibold text-gray-800 flex items-center gap-2">
-          Manage Permissions
-        </h2>
+    <div className="max-w-full px-4 py-6 font-sans">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <h1 className="text-3xl font-bold text-gray-800">Manage Permissions</h1>
       </div>
 
       {!selectedRole ? (
-        <div className="w-full overflow-x-auto rounded-lg shadow-md border border-gray-200">
-          <table className="min-w-[600px] w-full bg-white rounded-lg overflow-hidden">
-            <thead className="bg-gray-100 text-gray-700 text-xs uppercase tracking-wider">
+        <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
+          <table className="min-w-[1000px] w-full text-sm text-gray-700">
+            <thead className="bg-gray-100 text-xs uppercase">
               <tr>
                 <th className="px-3 py-1.5 text-left">Role Name</th>
                 <th className="px-3 py-1.5 text-center">Actions</th>
               </tr>
-              <tr className="bg-white text-gray-600 text-xs">
+              <tr className="bg-white sticky top-0 z-10 shadow-sm text-sm">
                 <th className="px-3 py-1.5">
                   <input
                     type="text"

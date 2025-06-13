@@ -109,11 +109,10 @@ const EnterpriseForm = () => {
 
     try {
       await dispatch(action(dataToSend)).unwrap(); // proper success/error handling
-      toast.success(`User ${isEditMode ? "updated" : "created"} successfully`);
+      toast.success(`Enterprise ${isEditMode ? "updated" : "created"} successfully`);
       navigate("/module/admin-module/enterprise_management");
     } catch (err) {
-      console.error("❌ User form submission error:", err);
-
+      console.error("❌ Enterprise form submission error:", err);
       // Backend se agar proper message aaye to dikhao
       const errorMsg =
         err?.message ||
