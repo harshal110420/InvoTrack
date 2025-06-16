@@ -11,6 +11,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import EnterpriseDropdownTree from "./EnterpriseDropdownTree";
 import { toast } from "react-toastify";
 import { Check, X } from "lucide-react";
+import { getModulePathByMenu } from "../../../utils/navigation";
 
 const initialFormData = {
   enterpriseCode: "",
@@ -53,7 +54,11 @@ const EnterpriseForm = () => {
     enterpriseList,
   } = useSelector((state) => state.enterprise);
   const [currentStep, setCurrentStep] = useState(0);
+  const modules = useSelector((state) => state.modules.list);
+  const menus = useSelector((state) => state.menus.list);
+  const modulePath = getModulePathByMenu("enterprise_management", modules, menus);
 
+  
   useEffect(() => {
     dispatch(fetchEnterprises());
     if (id) {
@@ -109,8 +114,10 @@ const EnterpriseForm = () => {
 
     try {
       await dispatch(action(dataToSend)).unwrap(); // proper success/error handling
-      toast.success(`Enterprise ${isEditMode ? "updated" : "created"} successfully`);
-      navigate("/module/admin-module/enterprise_management");
+      toast.success(
+        `Enterprise ${isEditMode ? "updated" : "created"} successfully`
+      );
+      navigate(`/module/${modulePath}/enterprise_management`);
     } catch (err) {
       console.error("❌ Enterprise form submission error:", err);
       // Backend se agar proper message aaye to dikhao

@@ -3,10 +3,13 @@ import ButtonWrapper from "../../../components/ButtonWrapper";
 import { useNavigate } from "react-router-dom";
 import debounce from "lodash.debounce";
 import { Eye, Pencil } from "lucide-react";
+import { getModulePathByMenu } from "../../../utils/navigation";
 
 const FlatListView = ({ data }) => {
   const navigate = useNavigate();
-
+  const modules = useSelector((state) => state.modules.list);
+  const menus = useSelector((state) => state.menus.list);
+  const modulePath = getModulePathByMenu("enterprise_management", modules, menus);
   // Immediate input values
   const [searchCode, setSearchCode] = useState("");
   const [searchName, setSearchName] = useState("");
@@ -185,7 +188,7 @@ const FlatListView = ({ data }) => {
                     <button
                       onClick={() =>
                         navigate(
-                          `/module/admin-module/enterprise_management/update/${ent._id}`
+                          `/module/${modulePath}/enterprise_management/update/${ent._id}`
                         )
                       }
                       className="text-blue-600 hover:text-blue-800 transition"
@@ -202,7 +205,7 @@ const FlatListView = ({ data }) => {
                     <button
                       onClick={() =>
                         navigate(
-                          `/module/admin-module/enterprise_management/get/${ent._id}`
+                          `/module/${modulePath}/enterprise_management/get/${ent._id}`
                         )
                       }
                       className="text-green-600 hover:text-green-800"

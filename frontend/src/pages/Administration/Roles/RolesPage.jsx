@@ -5,12 +5,15 @@ import ButtonWrapper from "../../../components/ButtonWrapper";
 import { useNavigate } from "react-router-dom";
 import debounce from "lodash.debounce";
 import { PlusCircle } from "lucide-react";
+import { getModulePathByMenu } from "../../../utils/navigation";
 
 const RolesPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { roles = [], loading, error } = useSelector((state) => state.roles);
-
+  const modules = useSelector((state) => state.modules.list);
+  const menus = useSelector((state) => state.menus.list);
+  const modulePath = getModulePathByMenu("role_management", modules, menus);
   const [searchInput, setSearchInput] = useState(""); // raw input
   const [searchRoleName, setSearchRoleName] = useState(""); // debounced filter
   const [statusFilter, setStatusFilter] = useState("all");
@@ -49,7 +52,9 @@ const RolesPage = () => {
         <ButtonWrapper subModule="Role Management" permission="new">
           <button
             className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded-md shadow-sm transition-all duration-200 hover:shadow-md"
-            onClick={() => navigate("/module/admin-module/role_management/create")}
+            onClick={() =>
+              navigate(`/module/${modulePath}/role_management/create`)
+            }
           >
             <PlusCircle className="w-4 h-4" />
             <span>Create</span>
@@ -130,7 +135,7 @@ const RolesPage = () => {
                         <button
                           onClick={() =>
                             navigate(
-                              `/module/admin-module/role_management/update/${role._id}`
+                              `/module/${modulePath}/role_management/update/${role._id}`
                             )
                           }
                           title="Edit Role"

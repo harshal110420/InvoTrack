@@ -11,6 +11,7 @@ import TreeView from "./TreeView";
 import ButtonWrapper from "../../../components/ButtonWrapper";
 import { useNavigate } from "react-router-dom";
 import { PlusCircle } from "lucide-react";
+import { getModulePathByMenu } from "../../../utils/navigation";
 
 const EnterprisePage = () => {
   const dispatch = useDispatch();
@@ -19,6 +20,13 @@ const EnterprisePage = () => {
     (state) => state.enterprise
   );
   const [viewMode, setViewMode] = useState("flat");
+  const modules = useSelector((state) => state.modules.list);
+  const menus = useSelector((state) => state.menus.list);
+  const modulePath = getModulePathByMenu(
+    "enterprise_management",
+    modules,
+    menus
+  );
 
   useEffect(() => {
     dispatch(fetchEnterprises());
@@ -80,13 +88,13 @@ const EnterprisePage = () => {
 
           <ButtonWrapper subModule="Enterprise Management" permission="new">
             <button
-            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded-md shadow-sm transition-all duration-200 hover:shadow-md"
+              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded-md shadow-sm transition-all duration-200 hover:shadow-md"
               onClick={() =>
-                navigate("/module/admin-module/enterprise_management/create")
+                navigate(`/module/${modulePath}/enterprise_management/create`)
               }
             >
-             <PlusCircle className="w-4 h-4" />
-            <span>Create</span>
+              <PlusCircle className="w-4 h-4" />
+              <span>Create</span>
             </button>
           </ButtonWrapper>
         </div>

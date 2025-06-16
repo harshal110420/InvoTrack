@@ -5,6 +5,7 @@ import ButtonWrapper from "../../../components/ButtonWrapper";
 import { useNavigate } from "react-router-dom";
 import debounce from "lodash.debounce";
 import { PlusCircle } from "lucide-react";
+import { getModulePathByMenu } from "../../../utils/navigation";
 
 const MenuPage = () => {
   const dispatch = useDispatch();
@@ -14,7 +15,9 @@ const MenuPage = () => {
     loading,
     error,
   } = useSelector((state) => state.menus);
-
+  const modules = useSelector((state) => state.modules.list);
+  const menu = useSelector((state) => state.menus.list);
+  const modulePath = getModulePathByMenu("menu_management", modules, menu);
   const [searchInput, setSearchInput] = useState("");
   const [searchName, setSearchName] = useState("");
 
@@ -60,7 +63,7 @@ const MenuPage = () => {
           <button
             className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded-md shadow-sm transition-all duration-200 hover:shadow-md"
             onClick={() =>
-              navigate("/module/system-module/menu_management/create")
+              navigate(`/module/${modulePath}/menu_management/create`)
             }
           >
             <PlusCircle className="w-4 h-4" />
@@ -149,7 +152,7 @@ const MenuPage = () => {
                         <button
                           onClick={() =>
                             navigate(
-                              `/module/system-module/menu_management/update/${menu.id}`
+                              `/module/${modulePath}/menu_management/update/${menu.id}`
                             )
                           }
                           title="Edit Menu"

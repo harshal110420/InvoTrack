@@ -7,13 +7,16 @@ import debounce from "lodash.debounce";
 import ButtonWrapper from "../../../components/ButtonWrapper";
 import { PlusCircle, Pencil } from "lucide-react";
 import EnterpriseDropdownTree from "./EnterpriseDropdownTree";
+import { getModulePathByMenu } from "../../../utils/navigation";
 
 const UsersPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { userList = [], loading, error } = useSelector((state) => state.users);
   const { enterpriseList = [] } = useSelector((state) => state.enterprise);
-
+  const modules = useSelector((state) => state.modules.list);
+  const menus = useSelector((state) => state.menus.list);
+  const modulePath = getModulePathByMenu("user_management", modules, menus);
   const [searchInputs, setSearchInputs] = useState({
     username: "",
     fullName: "",
@@ -98,7 +101,7 @@ const UsersPage = () => {
           <button
             className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded-md shadow-sm transition-all duration-200 hover:shadow-md"
             onClick={() =>
-              navigate("/module/admin-module/user_management/create")
+              navigate(`/module/${modulePath}/user_management/create`)
             }
           >
             <PlusCircle className="w-4 h-4" />
@@ -156,7 +159,7 @@ const UsersPage = () => {
                 <select
                   value={filters.role}
                   onChange={(e) => handleFilterChange("role", e.target.value)}
-                className="w-full px-2 py-1 border text-xs border-gray-300 rounded"
+                  className="w-full px-2 py-1 border text-xs border-gray-300 rounded"
                 >
                   <option value="">All Roles</option>
                   {[
@@ -176,7 +179,7 @@ const UsersPage = () => {
                   onChange={(e) =>
                     handleFilterChange("isActive", e.target.value)
                   }
-                className="w-full px-2 py-1 border text-xs border-gray-300 rounded"
+                  className="w-full px-2 py-1 border text-xs border-gray-300 rounded"
                 >
                   <option value="">All</option>
                   <option value="active">Active</option>
@@ -225,7 +228,7 @@ const UsersPage = () => {
                       <button
                         onClick={() =>
                           navigate(
-                            `/module/admin-module/user_management/update/${user._id}`
+                            `/module/${modulePath}/user_management/update/${user._id}`
                           )
                         }
                         className="text-blue-600 hover:text-blue-800 transition"

@@ -11,6 +11,7 @@ import { fetchModules } from "../../../features/Modules/ModuleSlice";
 import { useNavigate, useParams } from "react-router-dom";
 import { Check, X } from "lucide-react";
 import { toast } from "react-toastify";
+import { getModulePathByMenu } from "../../../utils/navigation";
 
 const initialFormData = {
   parentCode: "root",
@@ -29,6 +30,9 @@ const MenuForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditMode = Boolean(id);
+  const modules = useSelector((state) => state.modules.list);
+  const menus = useSelector((state) => state.menus.list);
+  const modulePath = getModulePathByMenu("menu_management", modules, menus);
 
   const [formData, setFormData] = useState(initialFormData);
   const [currentStep, setCurrentStep] = useState(0);
@@ -82,7 +86,7 @@ const MenuForm = () => {
     try {
       await dispatch(action).unwrap();
       toast.success(`Menu ${isEditMode ? "updated" : "created"} successfully`);
-      navigate("/module/system-module/menu_management");
+      navigate(`/module/${modulePath}/menu_management`);
     } catch (err) {
       console.error("❌ Menu form submission error:", err);
       const errorMsg =

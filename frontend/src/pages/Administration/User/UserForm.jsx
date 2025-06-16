@@ -12,6 +12,7 @@ import { toast } from "react-toastify";
 import EnterpriseMultiSelectTree from "./EnterpriseMultiSelectTree";
 import EnterpriseHierarchicalDropdown from "./EnterpriseHierarchicalDropdown";
 import { Check, StepBack, StepForward, X } from "lucide-react";
+import { getModulePathByMenu } from "../../../utils/navigation";
 
 const initialFormData = {
   fullName: "",
@@ -90,6 +91,9 @@ const UserForm = () => {
   const [formData, setFormData] = useState(initialFormData);
   const [filteredEnterprises, setFilteredEnterprises] = useState([]);
   const [isSuperUserFlag, setIsSuperUserFlag] = useState(formData.isSuperUser);
+  const modules = useSelector((state) => state.modules.list);
+  const menus = useSelector((state) => state.menus.list);
+  const modulePath = getModulePathByMenu("user_management", modules, menus);
 
   const { enterpriseList = [], loading } = useSelector(
     (state) => state.enterprise
@@ -236,7 +240,7 @@ const UserForm = () => {
     try {
       await dispatch(action(dataToSend)).unwrap(); // proper success/error handling
       toast.success(`User ${isEditMode ? "updated" : "created"} successfully`);
-      navigate("/module/admin-module/user_management");
+      navigate(`/module/${modulePath}/user_management`);
     } catch (err) {
       console.error("❌ User form submission error:", err);
 

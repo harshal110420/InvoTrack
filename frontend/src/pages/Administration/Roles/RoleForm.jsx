@@ -8,6 +8,7 @@ import {
 } from "../../../features/Roles/roleFormSlice";
 import { Check, X } from "lucide-react";
 import { toast } from "react-toastify";
+import { getModulePathByMenu } from "../../../utils/navigation";
 
 const initialFormData = {
   roleName: "",
@@ -26,6 +27,9 @@ const RoleForm = () => {
   const { currentRole, loading } = useSelector((state) => state.roleForm);
   const [formData, setFormData] = useState(initialFormData);
   const [currentStep, setCurrentStep] = useState(0);
+  const modules = useSelector((state) => state.modules.list);
+  const menus = useSelector((state) => state.menus.list);
+  const modulePath = getModulePathByMenu("role_management", modules, menus);
 
   useEffect(() => {
     if (isEditMode) {
@@ -68,7 +72,7 @@ const RoleForm = () => {
     try {
       await dispatch(action(dataToSend)).unwrap(); // success or error throw
       toast.success(`Role ${isEditMode ? "updated" : "created"} successfully`);
-      navigate("/module/admin-module/role_management");
+      navigate(`/module/${modulePath}/role_management`);
     } catch (err) {
       console.error("❌ Role form submission error:", err);
       const errorMsg =
