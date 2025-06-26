@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPermissions } from "../features/permissions/permissionSlice";
 import { useAuth } from "../context/AuthContext";
@@ -11,6 +11,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   const { modules, loading } = useSelector((state) => state.permission);
 
@@ -26,19 +27,23 @@ const Dashboard = () => {
     handleLogout();
     navigate("/login");
   };
-  // console.log("👀 EnterpriseSwitcher data", {
-  //   user: user?.fullName,
-  //   isSuperUser: user?.isSuperUser,
-  //   enterprises: user?.enterprises,
-  //   selectedEnterprise,
-  // });
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false); // ✅ Correct state name
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <div className="h-screen flex flex-col bg-gray-100">
       {/* Navbar */}
       <nav className="bg-white shadow-md py-3 px-6 flex justify-between items-center">
         <div className="text-xl font-bold text-blue-600">InvoTrack</div>
-        <div className="relative">
+        <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className="bg-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300"
@@ -46,7 +51,7 @@ const Dashboard = () => {
             {user.fullName}
           </button>
           {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-lg overflow-hidden">
+            <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-lg overflow-hidden z-50">
               <div className="p-4 text-sm text-gray-700 border-b">
                 {user.email}
               </div>
